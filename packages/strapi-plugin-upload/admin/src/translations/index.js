@@ -5,7 +5,7 @@ import ru from './ru.json';
 const trads = {
   en,
   ms,
-  ru,
+  ru
 };
 
 export default trads;
