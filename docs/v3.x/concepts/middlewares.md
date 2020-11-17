@@ -170,6 +170,9 @@ The following middlewares cannot be disabled: responses, router, logger and boom
   - `multipart` (boolean): Enable or disable multipart bodies parsing. Default value: `true`.
   - `jsonLimit` (string|integer): The byte (if integer) limit of the JSON body. Default value: `1mb`.
   - `formLimit` (string|integer): The byte (if integer) limit of the form body. Default value: `56k`.
+  - `queryStringParser` (see [qs](https://github.com/ljharb/qs) for a full list of options).
+    - `arrayLimit` (integer): the maximum length of an array in the query string. Any array members with an index of greater than the limit will instead be converted to an object with the index as the key. Default value: `100`.
+    - `depth` (integer): maximum parsing depth of nested query string objects. Default value: `20`.
 
 ::: tip
 The session doesn't work with `mongo` as a client. The package that we should use is broken for now.
@@ -179,11 +182,16 @@ The session doesn't work with `mongo` as a client. The package that we should us
 
 - [`gzip`](https://en.wikipedia.org/wiki/Gzip)
   - `enabled` (boolean): Enable or not GZIP response compression.
+  - `options` (Object): Allow passing of options from [koa-compress](https://github.com/koajs/compress#options).
 - `responseTime`
   - `enabled` (boolean): Enable or not `X-Response-Time header` to response. Default value: `false`.
 - `poweredBy`
   - `enabled` (boolean): Enable or not `X-Powered-By` header to response. Default value: `true`.
   - `value` (string): The value of the header. Default value: `Strapi <strapi.io>`
+
+::: tip
+`gzip` compression via `koa-compress` uses [Brotli](https://en.wikipedia.org/wiki/Brotli) by default, but is not configured with sensible defaults for most cases. If you experience slow response times with `gzip` enabled, consider disabling Brotli by passing `{br: false}` as an option. You may also pass more sensible params with `{br: { params: { // YOUR PARAMS HERE } }}`
+:::
 
 ### Security middlewares
 
