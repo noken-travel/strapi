@@ -44,15 +44,15 @@ const checkDuplicatedTableNames = ({ strapi }) => {
     });
   });
 
-  modelsWithInfo.forEach(modelA => {
+  modelsWithInfo.forEach((modelA) => {
     const similarModelFound = modelsWithInfo.find(
-      modelB =>
+      (modelB) =>
         modelB.model.collectionName === modelA.model.collectionName &&
         modelB.model.uid !== modelA.model.uid
     );
 
     if (similarModelFound) {
-      throw new Error(createErrorMessage(modelA, similarModelFound));
+      console.error(createErrorMessage(modelA, similarModelFound));
     }
   });
 };
