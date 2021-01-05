@@ -1,9 +1,6 @@
 'use strict';
-/**
- * Upload plugin bootstrap.
- *
- * It initializes the provider and sets the default settings in db.
- */
+
+const { convertToStrapiError } = require('../../errors');
 
 module.exports = async () => {
   // set plugin store
@@ -28,13 +25,26 @@ module.exports = async () => {
   }
 
   await pruneObsoleteRelations();
+  registerPermissionActions();
+};
+
+const wrapFunctionForErrors = fn => async (...args) => {
+  try {
+    return await fn(...args);
+  } catch (err) {
+    throw convertToStrapiError(err);
+  }
 };
 
 const createProvider = ({ provider, providerOptions }) => {
   try {
     const providerInstance = require(`strapi-provider-upload-${provider}`).init(providerOptions);
 
-    return Object.assign(Object.create(baseProvider), providerInstance);
+    return Object.assign(Object.create(baseProvider), {
+      ...providerInstance,
+      upload: wrapFunctionForErrors(providerInstance.upload.bind(providerInstance)),
+      delete: wrapFunctionForErrors(providerInstance.delete.bind(providerInstance)),
+    });
   } catch (err) {
     strapi.log.error(err);
     throw new Error(
@@ -78,4 +88,53 @@ const pruneObsoleteRelationsQuery = ({ model }) => {
     { related: { $elemMatch: { kind: { $nin: modelsId } } } },
     { $pull: { related: { kind: { $nin: modelsId } } } }
   );
+};
+
+const registerPermissionActions = () => {
+  const actions = [
+    {
+      section: 'plugins',
+      displayName: 'Access the Media Library',
+      uid: 'read',
+      pluginName: 'upload',
+    },
+    {
+      section: 'plugins',
+      displayName: 'Create (upload)',
+      uid: 'assets.create',
+      subCategory: 'assets',
+      pluginName: 'upload',
+    },
+    {
+      section: 'plugins',
+      displayName: 'Update (crop, details, replace) + delete',
+      uid: 'assets.update',
+      subCategory: 'assets',
+      pluginName: 'upload',
+    },
+    {
+      section: 'plugins',
+      displayName: 'Download',
+      uid: 'assets.download',
+      subCategory: 'assets',
+      pluginName: 'upload',
+    },
+    {
+      section: 'plugins',
+      displayName: 'Copy link',
+      uid: 'assets.copy-link',
+      subCategory: 'assets',
+      pluginName: 'upload',
+    },
+    {
+      section: 'settings',
+      displayName: 'Access the Media Library settings page',
+      uid: 'settings.read',
+      category: 'media library',
+      pluginName: 'upload',
+    },
+  ];
+
+  const { actionProvider } = strapi.admin.services.permission;
+  actionProvider.register(actions);
 };

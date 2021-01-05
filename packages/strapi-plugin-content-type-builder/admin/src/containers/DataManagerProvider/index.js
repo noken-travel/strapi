@@ -1,6 +1,6 @@
-import React, { memo, useEffect, useReducer, useState, useRef } from 'react';
+import React, { memo, useEffect, useMemo, useReducer, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { get, groupBy, set, size, chain } from 'lodash';
+import { get, groupBy, set, size } from 'lodash';
 import {
   request,
   LoadingIndicatorPage,
@@ -37,8 +37,9 @@ const DataManagerProvider = ({ allIcons, children }) => {
     autoReload,
     currentEnvironment,
     emitEvent,
+    fetchUserPermissions,
     formatMessage,
-    updatePlugin,
+    menu,
   } = useGlobalContext();
   const {
     components,
@@ -102,7 +103,10 @@ const DataManagerProvider = ({ allIcons, children }) => {
       });
     } catch (err) {
       console.error({ err });
-      strapi.notification.error('notification.error');
+      strapi.notification.toggle({
+        type: 'warning',
+        message: { id: 'notification.error' },
+      });
     }
   };
 
@@ -121,11 +125,10 @@ const DataManagerProvider = ({ allIcons, children }) => {
 
   useEffect(() => {
     if (currentEnvironment === 'development' && !autoReload) {
-      strapi.notification.info(
-        formatMessageRef.current({
-          id: getTrad('notification.info.autoreaload-disable'),
-        })
-      );
+      strapi.notification.toggle({
+        type: 'info',
+        message: { id: getTrad('notification.info.autoreaload-disable') },
+      });
     }
   }, [autoReload, currentEnvironment]);
 
@@ -211,6 +214,7 @@ const DataManagerProvider = ({ allIcons, children }) => {
   const deleteCategory = async categoryUid => {
     try {
       const requestURL = `/${pluginId}/component-categories/${categoryUid}`;
+      // eslint-disable-next-line no-alert
       const userConfirm = window.confirm(
         formatMessage({
           id: getTrad('popUpWarning.bodyMessage.category.delete'),
@@ -220,7 +224,12 @@ const DataManagerProvider = ({ allIcons, children }) => {
       push({ search: '' });
 
       if (userConfirm) {
+        strapi.lockApp();
+
         await request(requestURL, { method: 'DELETE' }, true);
+
+        await updatePermissions();
+
         // Reload the plugin so the cycle is new again
         dispatch({ type: 'RELOAD_PLUGIN' });
         // Refetch all the data
@@ -228,7 +237,12 @@ const DataManagerProvider = ({ allIcons, children }) => {
       }
     } catch (err) {
       console.error({ err });
-      strapi.notification.error('notification.error');
+      strapi.notification.toggle({
+        type: 'warning',
+        message: { id: 'notification.error' },
+      });
+    } finally {
+      strapi.unlockApp();
     }
   };
 
@@ -236,6 +250,7 @@ const DataManagerProvider = ({ allIcons, children }) => {
     try {
       const requestURL = `/${pluginId}/${endPoint}/${currentUid}`;
       const isTemporary = get(modifiedData, [firstKeyToMainSchema, 'isTemporary'], false);
+      // eslint-disable-next-line no-alert
       const userConfirm = window.confirm(
         formatMessage({
           id: getTrad(
@@ -258,10 +273,15 @@ const DataManagerProvider = ({ allIcons, children }) => {
           return;
         }
 
+        strapi.lockApp();
+
         await request(requestURL, { method: 'DELETE' }, true);
 
         // Reload the plugin so the cycle is new again
         dispatch({ type: 'RELOAD_PLUGIN' });
+
+        // Refetch the permissions
+        await updatePermissions();
 
         // Update the app menu
         await updateAppMenu();
@@ -270,7 +290,12 @@ const DataManagerProvider = ({ allIcons, children }) => {
       }
     } catch (err) {
       console.error({ err });
-      strapi.notification.error('notification.error');
+      strapi.notification.toggle({
+        type: 'warning',
+        message: { id: 'notification.error' },
+      });
+    } finally {
+      strapi.unlockApp();
     }
   };
 
@@ -281,8 +306,13 @@ const DataManagerProvider = ({ allIcons, children }) => {
       // Close the modal
       push({ search: '' });
 
+      // Lock the app
+      strapi.lockApp();
+
       // Update the category
       await request(requestURL, { method: 'PUT', body }, true);
+
+      await updatePermissions();
 
       // Reload the plugin so the cycle is new again
       dispatch({ type: 'RELOAD_PLUGIN' });
@@ -290,7 +320,12 @@ const DataManagerProvider = ({ allIcons, children }) => {
       getDataRef.current();
     } catch (err) {
       console.error({ err });
-      strapi.notification.error('notification.error');
+      strapi.notification.toggle({
+        type: 'warning',
+        message: { id: 'notification.error' },
+      });
+    } finally {
+      strapi.unlockApp();
     }
   };
 
@@ -358,16 +393,22 @@ const DataManagerProvider = ({ allIcons, children }) => {
     });
   };
 
-  const shouldRedirect = () => {
+  const shouldRedirect = useMemo(() => {
     const dataSet = isInContentTypeView ? contentTypes : components;
 
     return !Object.keys(dataSet).includes(currentUid) && !isLoading;
-  };
+  }, [components, contentTypes, currentUid, isInContentTypeView, isLoading]);
 
-  if (shouldRedirect()) {
-    const firstCTUid = Object.keys(contentTypes).sort()[0];
+  const redirectEndpoint = useMemo(() => {
+    const allowedEndpoints = Object.keys(contentTypes)
+      .filter(uid => get(contentTypes, [uid, 'schema', 'editable'], true))
+      .sort();
 
-    return <Redirect to={`/plugins/${pluginId}/content-types/${firstCTUid}`} />;
+    return get(allowedEndpoints, '0', '');
+  }, [contentTypes]);
+
+  if (shouldRedirect) {
+    return <Redirect to={`/plugins/${pluginId}/content-types/${redirectEndpoint}`} />;
   }
 
   const submitData = async additionalContentTypeData => {
@@ -400,7 +441,13 @@ const DataManagerProvider = ({ allIcons, children }) => {
       const baseURL = `/${pluginId}/${endPoint}`;
       const requestURL = isCreating ? baseURL : `${baseURL}/${currentUid}`;
 
+      // Lock the app
+      strapi.lockApp();
+
       await request(requestURL, { method, body }, true);
+
+      await updatePermissions();
+
       // Update the app menu
       await updateAppMenu();
 
@@ -426,8 +473,14 @@ const DataManagerProvider = ({ allIcons, children }) => {
       if (!isInContentTypeView) {
         emitEvent('didNotSaveComponent');
       }
+
       console.error({ err: err.response });
-      strapi.notification.error('notification.error');
+      strapi.notification.toggle({
+        type: 'warning',
+        message: { id: 'notification.error' },
+      });
+    } finally {
+      strapi.unlockApp();
     }
   };
 
@@ -436,26 +489,15 @@ const DataManagerProvider = ({ allIcons, children }) => {
     toggleInfoModal(prev => ({ ...prev, cancel: !prev.cancel }));
   };
 
-  // Really temporary until menu API
+  // Update the menu using the internal API
   const updateAppMenu = async () => {
-    const requestURL = '/content-manager/content-types';
-
-    try {
-      const { data } = await request(requestURL, { method: 'GET' });
-
-      updatePlugin(
-        'content-manager',
-        'leftMenuSections',
-        chain(data)
-          .groupBy('schema.kind')
-          .map((value, key) => ({ name: key, links: value }))
-          .sortBy('name')
-          .value()
-      );
-    } catch (err) {
-      console.error({ err });
-      strapi.notification.error('notification.error');
+    if (menu.getModels) {
+      await menu.getModels();
     }
+  };
+
+  const updatePermissions = async () => {
+    await fetchUserPermissions();
   };
 
   const updateSchema = (data, schemaType, componentUID) => {

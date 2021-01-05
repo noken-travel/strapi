@@ -1,11 +1,13 @@
+'use strict';
+
 // eslint-disable-next-line node/no-extraneous-require
 const strapiAdmin = require('strapi-admin');
 const { getConfigUrls, getAbsoluteServerUrl } = require('strapi-utils');
-
 const loadConfiguration = require('../core/app-configuration');
+
 const addSlash = require('../utils/addSlash');
 
-module.exports = async function() {
+module.exports = async function({ browser }) {
   const dir = process.cwd();
 
   const config = loadConfiguration(dir);
@@ -20,6 +22,7 @@ module.exports = async function() {
     dir,
     port: adminPort,
     host: adminHost,
+    browser,
     options: {
       backend: getAbsoluteServerUrl(config, true),
       publicPath: addSlash(adminPath),

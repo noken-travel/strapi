@@ -10,9 +10,9 @@ const path = require('path');
 const _ = require('lodash');
 const moment = require('moment');
 const pathToRegexp = require('path-to-regexp');
+const defaultSettings = require('../config/settings.json');
 const defaultComponents = require('./utils/components.json');
 const form = require('./utils/forms.json');
-const defaultSettings = require('../config/settings.json');
 const parametersOptions = require('./utils/parametersOptions.json');
 
 // keys to pick from the extended config
@@ -545,7 +545,9 @@ module.exports = {
           const name = currentAssociation.model || currentAssociation.collection;
           const getter =
             currentAssociation.plugin !== undefined
-              ? ['plugins', currentAssociation.plugin, 'models', name, 'attributes']
+              ? currentAssociation.plugin === 'admin'
+                ? ['admin', 'models', name, 'attributes']
+                : ['plugins', currentAssociation.plugin, 'models', name, 'attributes']
               : ['models', name.toLowerCase(), 'attributes'];
           const associationAttributes = _.get(strapi, getter);
           const associationSchema = this.generateAssociationSchema(associationAttributes, getter);
@@ -620,6 +622,7 @@ module.exports = {
         } else {
           acc.properties[current] = {
             type,
+            format: this.getFormat(attribute.type),
             description,
             default: defaultValue,
             minimum,
@@ -1454,6 +1457,8 @@ module.exports = {
       case 'text':
       case 'enumeration':
       case 'date':
+      case 'datetime':
+      case 'time':
       case 'richtext':
         return 'string';
       case 'float':
@@ -1468,6 +1473,24 @@ module.exports = {
         return 'object';
       default:
         return type;
+    }
+  },
+
+  /**
+   * Refer to https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md#dataTypes
+   * @param {String} type
+   * @returns {String}
+   */
+  getFormat: type => {
+    switch (type) {
+      case 'date':
+        return 'date';
+      case 'datetime':
+        return 'date-time';
+      case 'password':
+        return 'password';
+      default:
+        return undefined;
     }
   },
 

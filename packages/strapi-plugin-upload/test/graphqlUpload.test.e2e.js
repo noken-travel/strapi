@@ -1,41 +1,20 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 
 const { registerAndLogin } = require('../../../test/helpers/auth');
 const { createAuthRequest } = require('../../../test/helpers/request');
 
 let rq;
 
-const defaultProviderConfig = {
-  provider: 'local',
-  name: 'Local server',
-  enabled: true,
-  sizeLimit: 1000000,
-};
-
-const resetProviderConfigToDefault = () => {
-  return setConfigOptions(defaultProviderConfig);
-};
-
-const setConfigOptions = assign => {
-  return rq.put('/upload/settings/development', {
-    body: {
-      ...defaultProviderConfig,
-      ...assign,
-    },
-  });
-};
+const data = {};
 
 describe('Upload plugin end to end tests', () => {
   beforeAll(async () => {
     const token = await registerAndLogin();
     rq = createAuthRequest(token);
   }, 60000);
-
-  afterEach(async () => {
-    await resetProviderConfigToDefault();
-  });
 
   test('Upload a single file', async () => {
     const req = rq.post('/graphql');
@@ -66,7 +45,7 @@ describe('Upload plugin end to end tests', () => {
       })
     );
 
-    form.append('0', fs.createReadStream(__dirname + '/rec.jpg'));
+    form.append('0', fs.createReadStream(path.join(__dirname, 'rec.jpg')));
 
     const res = await req;
 
@@ -79,6 +58,8 @@ describe('Upload plugin end to end tests', () => {
         },
       },
     });
+
+    data.file = res.body.data.upload;
   });
 
   test('Upload multiple files', async () => {
@@ -111,8 +92,8 @@ describe('Upload plugin end to end tests', () => {
       })
     );
 
-    form.append('0', fs.createReadStream(__dirname + '/rec.jpg'));
-    form.append('1', fs.createReadStream(__dirname + '/rec.jpg'));
+    form.append('0', fs.createReadStream(path.join(__dirname, 'rec.jpg')));
+    form.append('1', fs.createReadStream(path.join(__dirname, 'rec.jpg')));
 
     const res = await req;
 
@@ -125,6 +106,105 @@ describe('Upload plugin end to end tests', () => {
             name: 'rec.jpg',
           }),
         ]),
+      },
+    });
+  });
+
+  test('Update file information', async () => {
+    const res = await rq({
+      url: '/graphql',
+      method: 'POST',
+      body: {
+        query: /* GraphQL */ `
+          mutation updateFileInfo($id: ID!, $info: FileInfoInput!) {
+            updateFileInfo(id: $id, info: $info) {
+              id
+              name
+              alternativeText
+              caption
+            }
+          }
+        `,
+        variables: {
+          id: data.file.id,
+          info: {
+            name: 'test name',
+            alternativeText: 'alternative text test',
+            caption: 'caption test',
+          },
+        },
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({
+      data: {
+        updateFileInfo: {
+          id: data.file.id,
+          name: 'test name',
+          alternativeText: 'alternative text test',
+          caption: 'caption test',
+        },
+      },
+    });
+  });
+
+  test('Delete a file', async () => {
+    const res = await rq({
+      url: '/graphql',
+      method: 'POST',
+      body: {
+        query: /* GraphQL */ `
+          mutation removeFile($id: ID!) {
+            deleteFile(input: { where: { id: $id } }) {
+              file {
+                id
+              }
+            }
+          }
+        `,
+        variables: {
+          id: data.file.id,
+        },
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({
+      data: {
+        deleteFile: {
+          file: {
+            id: data.file.id,
+          },
+        },
+      },
+    });
+  });
+
+  test('Delete a file that dont exist', async () => {
+    const res = await rq({
+      url: '/graphql',
+      method: 'POST',
+      body: {
+        query: /* GraphQL */ `
+          mutation removeFile($id: ID!) {
+            deleteFile(input: { where: { id: $id } }) {
+              file {
+                id
+              }
+            }
+          }
+        `,
+        variables: {
+          id: '404',
+        },
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({
+      data: {
+        deleteFile: null,
       },
     });
   });

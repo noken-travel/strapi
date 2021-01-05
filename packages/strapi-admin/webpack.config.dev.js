@@ -1,3 +1,5 @@
+'use strict';
+
 const path = require('path');
 const webpackConfig = require('./webpack.config.js');
 
@@ -15,6 +17,7 @@ module.exports = () => {
     dest,
     env,
     options,
+    useEE: process.env.STRAPI_DISABLE_EE === 'true' ? false : true,
   };
 
   return {

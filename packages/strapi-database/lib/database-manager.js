@@ -108,6 +108,10 @@ class DatabaseManager {
     return _.get(strapi, ['models', key]) || _.get(strapi, ['components', key]);
   }
 
+  getModelByAssoc(assoc) {
+    return this.getModel(assoc.collection || assoc.model, assoc.plugin);
+  }
+
   getModelByCollectionName(collectionName) {
     return Array.from(this.models.values()).find(model => {
       return model.collectionName === collectionName;
@@ -118,6 +122,28 @@ class DatabaseManager {
     return Array.from(this.models.values()).find(model => {
       return model.globalId === globalId;
     });
+  }
+
+  getModelsByAttribute(attr) {
+    if (attr.type === 'component') {
+      return [this.getModel(attr.component)];
+    }
+    if (attr.type === 'dynamiczone') {
+      return attr.components.map(compoName => this.getModel(compoName));
+    }
+    if (attr.model || attr.collection) {
+      return [this.getModelByAssoc(attr)];
+    }
+
+    return [];
+  }
+
+  getModelsByPluginName(pluginName) {
+    if (!pluginName) {
+      return strapi.models;
+    }
+
+    return pluginName === 'admin' ? strapi.admin.models : strapi.plugins[pluginName].models;
   }
 
   getReservedNames() {

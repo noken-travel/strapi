@@ -7,7 +7,7 @@
  */
 
 const _ = require('lodash');
-const { GraphQLUpload } = require('apollo-server-koa');
+const { GraphQLUpload } = require('graphql-upload');
 const graphql = require('graphql');
 const { GraphQLJSON } = require('graphql-type-json');
 const { GraphQLDate, GraphQLDateTime } = require('graphql-iso-date');
@@ -71,8 +71,10 @@ module.exports = {
           break;
       }
 
-      if (attribute.required && action !== 'update') {
-        type += '!';
+      if (attribute.required) {
+        if (rootType !== 'mutation' || (action !== 'update' && attribute.default === undefined)) {
+          type += '!';
+        }
       }
 
       return type;
@@ -117,10 +119,7 @@ module.exports = {
     // Association
     if (ref && ref !== '*') {
       // Add bracket or not
-      const globalId = attribute.plugin
-        ? strapi.plugins[attribute.plugin].models[ref].globalId
-        : strapi.models[ref].globalId;
-
+      const globalId = strapi.db.getModel(ref, attribute.plugin).globalId;
       const plural = !_.isEmpty(attribute.collection);
 
       if (plural) {
@@ -157,18 +156,6 @@ module.exports = {
     return definition.enumName
       ? definition.enumName
       : `ENUM_${model.toUpperCase()}_${field.toUpperCase()}`;
-  },
-
-  /**
-   * Remove custom scalar type such as Upload because Apollo automatically adds it in the schema.
-   * but we need to add it to print the schema on our side.
-   *
-   * @return void
-   */
-
-  removeCustomScalar(typeDefs, resolvers) {
-    delete resolvers.Upload;
-    return typeDefs.replace('scalar Upload', '');
   },
 
   /**
