@@ -3,34 +3,34 @@ import PropTypes from 'prop-types';
 import { get } from 'lodash';
 import { Flex, Text, Checkbox, Padded } from '@buffetjs/core';
 
-import { getAttributesToDisplay } from '../../../../../../utils';
 import { usePermissionsContext } from '../../../../../../hooks';
+import { getAttributesToDisplay } from '../../../../../../utils';
 import {
-  ATTRIBUTES_PERMISSIONS_ACTIONS,
-  CONTENT_MANAGER_PREFIX,
-  getAttributesByModel,
+  contentManagerPermissionPrefix,
   getNumberOfRecursivePermissionsByAction,
+  getAttributesByModel,
   getRecursivePermissions,
+  ATTRIBUTES_PERMISSIONS_ACTIONS,
 } from '../../../utils';
-import AttributeRowWrapper from './AttributeRowWrapper';
-import Chevron from '../Chevron';
-import CollapseLabel from '../../CollapseLabel';
-import ComponentsAttributes from '../ComponentsAttributes';
 import PermissionCheckbox from '../../PermissionCheckbox';
 import PermissionName from '../PermissionName';
+import CollapseLabel from '../../CollapseLabel';
+import ComponentsAttributes from '../ComponentsAttributes';
+import Chevron from '../Chevron';
 import PermissionWrapper from '../PermissionWrapper';
+import AttributeRowWrapper from './AttributeRowWrapper';
 import Required from '../Required';
-import useFillRequiredPermissions from '../../useFillRequiredPermissions';
 
 const AttributeRow = ({ attribute, contentType }) => {
   const {
+    onCollapse,
     collapsePath,
     components,
     contentTypesPermissions,
-    dispatch,
+    onAllContentTypeActions,
+    onAllAttributeActionsSelect,
     isSuperAdmin,
   } = usePermissionsContext();
-  const fillRequiredPermissions = useFillRequiredPermissions(contentType);
   const isCollapsable = attribute.type === 'component';
   const isActive = collapsePath[1] === attribute.attributeName;
   const attributeActions = get(
@@ -70,25 +70,24 @@ const AttributeRow = ({ attribute, contentType }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentTypesPermissions]);
 
-  const handleCheckAllAction = ({ target: { value } }) => {
-    fillRequiredPermissions();
-
+  const handleCheckAllAction = () => {
     if (isCollapsable) {
       const attributes = recursiveAttributes;
-      dispatch({
-        type: 'ALL_CONTENT_TYPE_PERMISSIONS_SELECT',
+      const allActionsSize = attributes.length * ATTRIBUTES_PERMISSIONS_ACTIONS.length;
+      const shouldEnable = recursivePermissions >= 0 && recursivePermissions < allActionsSize;
+
+      onAllContentTypeActions({
         subject: contentType.uid,
         attributes,
-        shouldEnable: value,
+        shouldEnable,
         shouldSetAllContentTypes: false,
         shouldAddDeleteAction: true,
       });
     } else {
-      dispatch({
-        type: 'ALL_ATTRIBUTE_ACTIONS_SELECT',
+      onAllAttributeActionsSelect({
         subject: contentType.uid,
-        attribute,
-        shouldEnable: value,
+        attribute: attribute.attributeName,
+        shouldAddDeleteAction: true,
       });
     }
   };
@@ -118,11 +117,7 @@ const AttributeRow = ({ attribute, contentType }) => {
 
   const handleToggleAttributes = () => {
     if (isCollapsable) {
-      dispatch({
-        type: 'COLLAPSE_PATH',
-        index: 1,
-        value: attribute.attributeName,
-      });
+      onCollapse(1, attribute.attributeName);
     }
   };
 
@@ -157,15 +152,15 @@ const AttributeRow = ({ attribute, contentType }) => {
             <Checkbox
               disabled={isSuperAdmin || (attribute.required && !isCollapsable)}
               name={attribute.attributeName}
-              onChange={handleCheckAllAction}
+              value={hasAllActions}
               someChecked={hasSomeActions}
-              value={attribute.required || hasAllActions}
+              onChange={handleCheckAllAction}
             />
             <CollapseLabel
+              title={attribute.attributeName}
               alignItems="center"
               isCollapsable={isCollapsable}
               onClick={handleToggleAttributes}
-              title={attribute.attributeName}
             >
               <Text
                 color={isActive ? 'mediumBlue' : 'grey'}
@@ -187,12 +182,11 @@ const AttributeRow = ({ attribute, contentType }) => {
                 key={action}
                 disabled
                 value={
-                  attribute.required ||
-                  allRecursiveChecked(`${CONTENT_MANAGER_PREFIX}.${action}`) ||
-                  checkPermission(`${CONTENT_MANAGER_PREFIX}.${action}`)
+                  allRecursiveChecked(`${contentManagerPermissionPrefix}.${action}`) ||
+                  checkPermission(`${contentManagerPermissionPrefix}.${action}`)
                 }
                 name={`${attribute.attributeName}-${action}`}
-                someChecked={someChecked(`${CONTENT_MANAGER_PREFIX}.${action}`)}
+                someChecked={someChecked(`${contentManagerPermissionPrefix}.${action}`)}
               />
             ))}
           </PermissionWrapper>

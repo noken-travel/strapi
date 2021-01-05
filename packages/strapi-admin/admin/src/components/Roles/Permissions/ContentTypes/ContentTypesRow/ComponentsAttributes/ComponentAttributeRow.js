@@ -7,17 +7,17 @@ import styled from 'styled-components';
 import { usePermissionsContext } from '../../../../../../hooks';
 import { getAttributesToDisplay } from '../../../../../../utils';
 import {
+  contentManagerPermissionPrefix,
   ATTRIBUTES_PERMISSIONS_ACTIONS,
-  CONTENT_MANAGER_PREFIX,
   getAttributesByModel,
   getNumberOfRecursivePermissionsByAction,
 } from '../../../utils';
-import Chevron from '../Chevron';
 import CollapseLabel from '../../CollapseLabel';
-import Curve from './Curve';
 import PermissionCheckbox from '../../PermissionCheckbox';
 import PermissionWrapper from '../PermissionWrapper';
+import Chevron from '../Chevron';
 import Required from '../Required';
+import Curve from './Curve';
 // eslint-disable-next-line import/no-cycle
 import ComponentsAttributes from './index';
 import RowStyle from './RowStyle';
@@ -34,7 +34,7 @@ const AttributeRowWrapper = styled(Flex)`
 `;
 
 const ComponentAttributeRow = ({ attribute, index, numberOfAttributes, recursiveLevel }) => {
-  const { components, dispatch, contentTypesPermissions, collapsePath } = usePermissionsContext();
+  const { components, onCollapse, contentTypesPermissions, collapsePath } = usePermissionsContext();
   const isCollapsable = attribute.type === 'component';
   const contentTypeUid = collapsePath[0];
   const isActive = collapsePath[recursiveLevel + 2] === attribute.attributeName;
@@ -88,11 +88,7 @@ const ComponentAttributeRow = ({ attribute, index, numberOfAttributes, recursive
 
   const handleToggleAttributes = () => {
     if (isCollapsable) {
-      dispatch({
-        type: 'COLLAPSE_PATH',
-        index: recursiveLevel + 2,
-        value: attribute.attributeName,
-      });
+      onCollapse(recursiveLevel + 2, attribute.attributeName);
     }
   };
 
@@ -117,15 +113,15 @@ const ComponentAttributeRow = ({ attribute, index, numberOfAttributes, recursive
         <Flex style={{ flex: 1 }}>
           <RowStyle
             isActive={isActive}
-            isCollapsable={attribute.component}
             isRequired={attribute.required && !isCollapsable}
+            isCollapsable={attribute.component}
             level={recursiveLevel}
           >
             <CollapseLabel
+              title={attribute.attributeName}
               alignItems="center"
               isCollapsable={attribute.component}
               onClick={handleToggleAttributes}
-              title={attribute.attributeName}
             >
               <Text
                 color={isActive ? 'mediumBlue' : 'grey'}
@@ -146,11 +142,10 @@ const ComponentAttributeRow = ({ attribute, index, numberOfAttributes, recursive
               <PermissionCheckbox
                 disabled
                 key={`${attribute.attributeName}-${action}`}
-                someChecked={someChecked(`${CONTENT_MANAGER_PREFIX}.${action}`)}
+                someChecked={someChecked(`${contentManagerPermissionPrefix}.${action}`)}
                 value={
-                  attribute.required ||
-                  allRecursiveChecked(`${CONTENT_MANAGER_PREFIX}.${action}`) ||
-                  checkPermission(`${CONTENT_MANAGER_PREFIX}.${action}`)
+                  allRecursiveChecked(`${contentManagerPermissionPrefix}.${action}`) ||
+                  checkPermission(`${contentManagerPermissionPrefix}.${action}`)
                 }
                 name={`${attribute.attributeName}-${action}`}
               />

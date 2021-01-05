@@ -1,7 +1,8 @@
 import React from 'react';
 import { Flex, Padded, Text } from '@buffetjs/core';
 import { useIntl } from 'react-intl';
-import { BaselineAlignment, useQuery } from 'strapi-helper-plugin';
+import { useQuery } from 'strapi-helper-plugin';
+import BaselineAlignement from '../../BaselineAlignement';
 
 const EmptyRole = () => {
   const { formatMessage } = useIntl();
@@ -10,7 +11,7 @@ const EmptyRole = () => {
 
   return (
     <>
-      <BaselineAlignment top size="2px" />
+      <BaselineAlignement top size="2px" />
       <Padded top bottom size="md">
         <Flex justifyContent="center">
           <Text fontSize="lg" fontWeight="bold">

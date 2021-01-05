@@ -1,5 +1,3 @@
-'use strict';
-
 //TODO: move to dbal
 
 const _ = require('lodash');
@@ -11,7 +9,7 @@ const isAttribute = (model, field) =>
 /**
  * Returns the model, attribute name and association from a path of relation
  * @param {Object} options - Options
- * @param {Object} options.model - Strapi model
+ * @param {string} options.model - Strapi model
  * @param {string} options.field - path of relation / attribute
  */
 const getAssociationFromFieldKey = ({ model, field }) => {
@@ -92,24 +90,19 @@ const normalizeFieldName = ({ model, field }) => {
 
 const BOOLEAN_OPERATORS = ['or'];
 
-const hasDeepFilters = ({ where = [], sort = [] }, { minDepth = 1 } = {}) => {
-  // A query uses deep filtering if some of the clauses contains a sort or a match expression on a field of a relation
+const hasDeepFilters = (whereClauses = [], { minDepth = 1 } = {}) => {
+  return (
+    whereClauses.filter(({ field, operator, value }) => {
+      if (BOOLEAN_OPERATORS.includes(operator)) {
+        return value.filter(hasDeepFilters).length > 0;
+      }
 
-  // We don't use minDepth here because deep sorting is limited to depth 1
-  const hasDeepSortClauses = sort.some(({ field }) => field.includes('.'));
-
-  const hasDeepWhereClauses = where.some(({ field, operator, value }) => {
-    if (BOOLEAN_OPERATORS.includes(operator)) {
-      return value.some(clauses => hasDeepFilters({ where: clauses }));
-    }
-
-    return field.split('.').length > minDepth;
-  });
-
-  return hasDeepSortClauses || hasDeepWhereClauses;
+      return field.split('.').length > minDepth;
+    }).length > 0
+  );
 };
 
-const normalizeWhereClauses = (whereClauses, { model }) => {
+const normalizeClauses = (whereClauses, { model }) => {
   return whereClauses
     .filter(({ value }) => !_.isNil(value))
     .map(({ field, operator, value }) => {
@@ -117,7 +110,7 @@ const normalizeWhereClauses = (whereClauses, { model }) => {
         return {
           field,
           operator,
-          value: value.map(clauses => normalizeWhereClauses(clauses, { model })),
+          value: value.map(clauses => normalizeClauses(clauses, { model })),
         };
       }
 
@@ -139,22 +132,6 @@ const normalizeWhereClauses = (whereClauses, { model }) => {
     });
 };
 
-const normalizeSortClauses = (clauses, { model }) => {
-  const normalizedClauses = clauses.map(({ field, order }) => ({
-    field: normalizeFieldName({ model, field }),
-    order,
-  }));
-
-  normalizedClauses.forEach(({ field }) => {
-    if (field.includes('.')) {
-      // Check if the relational field exists
-      getAssociationFromFieldKey({ model, field });
-    }
-  });
-
-  return normalizedClauses;
-};
-
 /**
  *
  * @param {Object} options - Options
@@ -163,27 +140,19 @@ const normalizeSortClauses = (clauses, { model }) => {
  * @param {Object} options.rest - In case the database layer requires any other params pass them
  */
 const buildQuery = ({ model, filters = {}, ...rest }) => {
-  const { where, sort } = filters;
-
   // Validate query clauses
-  if ([where, sort].some(Array.isArray)) {
-    if (hasDeepFilters({ where, sort }, { minDepth: 2 })) {
+  if (filters.where && Array.isArray(filters.where)) {
+    if (hasDeepFilters(filters.where, { minDepth: 2 })) {
       strapi.log.warn(
         'Deep filtering queries should be used carefully (e.g Can cause performance issues).\nWhen possible build custom routes which will in most case be more optimised.'
       );
     }
 
-    if (sort) {
-      filters.sort = normalizeSortClauses(sort, { model });
-    }
-
-    if (where) {
-      // Cast where clauses to match the inner types
-      filters.where = normalizeWhereClauses(where, { model });
-    }
+    // cast where clauses to match the inner types
+    filters.where = normalizeClauses(filters.where, { model });
   }
 
-  // call the ORM's buildQuery implementation
+  // call the orm's buildQuery implementation
   return strapi.db.connectors.get(model.orm).buildQuery({ model, filters, ...rest });
 };
 

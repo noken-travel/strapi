@@ -10,5 +10,4 @@ module.exports = {
     '<rootDir>/test/',
   ],
   transform: {},
-  modulePathIgnorePatterns: ['.cache'],
 };

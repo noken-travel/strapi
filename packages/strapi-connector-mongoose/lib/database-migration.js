@@ -2,7 +2,6 @@
 
 const _ = require('lodash');
 const { contentTypes: contentTypesUtils } = require('strapi-utils');
-
 const { PUBLISHED_AT_ATTRIBUTE } = contentTypesUtils.constants;
 const { getDefinitionFromStore } = require('./utils/store-definition');
 

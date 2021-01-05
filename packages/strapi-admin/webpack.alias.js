@@ -1,7 +1,4 @@
-'use strict';
-
 const path = require('path');
-
 const alias = [
   'object-assign',
   'whatwg-fetch',
@@ -21,7 +18,6 @@ const alias = [
   'immutable',
   'invariant',
   'moment',
-  'qs',
   'react',
   'react-copy-to-clipboard',
   'react-dnd',

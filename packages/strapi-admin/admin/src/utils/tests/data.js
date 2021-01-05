@@ -2,6 +2,11 @@ const data = {
   contentTypesPermissions: {
     'plugins::users-permissions.user': {
       conditions: [],
+      contentTypeActions: {
+        'plugins::content-manager.explorer.read': false,
+        'plugins::content-manager.explorer.update': true,
+        'plugins::content-manager.explorer.create': true,
+      },
       attributes: {
         email: {
           actions: [
@@ -36,6 +41,8 @@ const data = {
       },
       contentTypeActions: {
         'plugins::content-manager.explorer.delete': true,
+        'plugins::content-manager.explorer.read': true,
+        'plugins::content-manager.explorer.update': false,
       },
       attributes: {
         name: {

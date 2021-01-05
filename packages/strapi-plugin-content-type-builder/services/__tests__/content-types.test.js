@@ -1,5 +1,3 @@
-'use strict';
-
 const { formatContentType } = require('../ContentTypes');
 
 describe('Content types service', () => {

@@ -79,7 +79,7 @@ const amountLimiting = (params = {}) => {
 
   if (!amountLimit) return params;
 
-  if (_.isNil(params.limit) || params.limit === -1 || params.limit > amountLimit) {
+  if (!params.limit || params.limit === -1 || params.limit > amountLimit) {
     params.limit = amountLimit;
   } else if (params.limit < 0) {
     params.limit = 0;

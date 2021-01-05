@@ -48,7 +48,7 @@ describe('User', () => {
         },
       };
 
-      const input = { firstname: 'Kai', lastname: 'Doe', email: 'kaidoe@email.com' };
+      const input = { firstname: 'John', lastname: 'Doe', email: 'johndoe@email.com' };
       const expected = { ...input, isActive: false, roles: [], registrationToken: 'token' };
 
       const result = await userService.create(input);
@@ -78,9 +78,9 @@ describe('User', () => {
       };
 
       const input = {
-        firstname: 'Kai',
+        firstname: 'John',
         lastname: 'Doe',
-        email: 'kaidoe@email.com',
+        email: 'johndoe@email.com',
         password: 'Pcw123',
       };
       const expected = {
@@ -120,9 +120,9 @@ describe('User', () => {
       };
 
       const input = {
-        firstname: 'Kai',
+        firstname: 'John',
         lastname: 'Doe',
-        email: 'kaidoe@email.com',
+        email: 'johndoe@email.com',
         roles: [2],
         isActive: true,
         registrationToken: 'another-token',
@@ -387,7 +387,7 @@ describe('User', () => {
   });
 
   describe('Fetch user', () => {
-    const user = { firstname: 'Kai', lastname: 'Doe', email: 'kaidoe@email.com' };
+    const user = { firstname: 'John', lastname: 'Doe', email: 'johndoe@email.com' };
 
     beforeEach(() => {
       const findOne = jest.fn(({ id }) =>

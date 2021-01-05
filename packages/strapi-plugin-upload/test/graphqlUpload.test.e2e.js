@@ -1,7 +1,6 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
 
 const { registerAndLogin } = require('../../../test/helpers/auth');
 const { createAuthRequest } = require('../../../test/helpers/request');
@@ -45,7 +44,7 @@ describe('Upload plugin end to end tests', () => {
       })
     );
 
-    form.append('0', fs.createReadStream(path.join(__dirname, 'rec.jpg')));
+    form.append('0', fs.createReadStream(__dirname + '/rec.jpg'));
 
     const res = await req;
 
@@ -92,8 +91,8 @@ describe('Upload plugin end to end tests', () => {
       })
     );
 
-    form.append('0', fs.createReadStream(path.join(__dirname, 'rec.jpg')));
-    form.append('1', fs.createReadStream(path.join(__dirname, 'rec.jpg')));
+    form.append('0', fs.createReadStream(__dirname + '/rec.jpg'));
+    form.append('1', fs.createReadStream(__dirname + '/rec.jpg'));
 
     const res = await req;
 

@@ -1,9 +1,8 @@
 'use strict';
 
-const crypto = require('crypto');
 const _ = require('lodash');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-
 const defaultJwtOptions = { expiresIn: '30d' };
 
 const getTokenOptions = () => {

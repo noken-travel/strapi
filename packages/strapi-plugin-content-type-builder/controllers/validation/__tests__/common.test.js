@@ -1,7 +1,5 @@
-'use strict';
-
-const yup = require('yup');
 const { isValidName } = require('../common');
+const yup = require('yup');
 
 function runTest(test, value) {
   return () =>

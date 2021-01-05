@@ -11,7 +11,6 @@ const url = require('url');
 const _ = require('lodash');
 const mongoose = require('mongoose');
 require('mongoose-long')(mongoose);
-
 const Mongoose = mongoose.Mongoose;
 
 const relations = require('./relations');

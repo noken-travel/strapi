@@ -1,5 +1,3 @@
-'use strict';
-
 const waitRestart = require('./waitRestart');
 
 module.exports = ({ rq }) => {
@@ -122,20 +120,16 @@ module.exports = ({ rq }) => {
 
   async function cleanupContentType(model) {
     const { body } = await rq({
-      url: `/content-manager/collection-types/application::${model}.${model}`,
-      qs: {
-        pageSize: 1000,
-      },
+      url: `/content-manager/explorer/application::${model}.${model}`,
       method: 'GET',
     });
 
-    if (Array.isArray(body.results) && body.results.length > 0) {
+    if (Array.isArray(body) && body.length > 0) {
+      const queryString = body.map((item, i) => `${i}=${item.id}`).join('&');
+
       await rq({
-        url: `/content-manager/collection-types/application::${model}.${model}/actions/bulkDelete`,
-        method: 'POST',
-        body: {
-          ids: body.results.map(({ id }) => id),
-        },
+        url: `/content-manager/explorer/deleteAll/application::${model}.${model}?${queryString}`,
+        method: 'DELETE',
       });
     }
   }

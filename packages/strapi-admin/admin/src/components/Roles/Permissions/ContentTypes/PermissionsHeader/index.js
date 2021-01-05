@@ -5,14 +5,10 @@ import { useIntl } from 'react-intl';
 
 import { usePermissionsContext } from '../../../../../hooks';
 import PermissionCheckbox from '../PermissionCheckbox';
-import {
-  getContentTypesActionsSize,
-  getPermissionsCountByAction,
-  isAttributeAction,
-} from '../../utils';
+import { getContentTypesActionsSize } from '../../utils';
 import Wrapper from './Wrapper';
 
-const PermissionsHeader = ({ allAttributes, contentTypes }) => {
+const PermissionsHeader = ({ contentTypes }) => {
   const { formatMessage } = useIntl();
   const { permissionsLayout, contentTypesPermissions } = usePermissionsContext();
 
@@ -24,38 +20,19 @@ const PermissionsHeader = ({ allAttributes, contentTypes }) => {
     [contentTypes, contentTypesPermissions]
   );
 
-  const getNumberOfPermissionByAction = useCallback(
-    action => {
-      return getPermissionsCountByAction(contentTypes, contentTypesPermissions, action);
-    },
-    [contentTypes, contentTypesPermissions]
-  );
-
   const hasSomeActions = permission => {
-    if (!isAttributeAction(permission.action)) {
-      return (
-        countContentTypesActionPermissions(permission.action) > 0 &&
-        countContentTypesActionPermissions(permission.action) <
-          filteredContentTypes(permission.subjects).length
-      );
-    }
-
-    const numberOfPermission = getNumberOfPermissionByAction(permission.action);
-
-    return numberOfPermission > 0 && numberOfPermission < allAttributes.length;
+    return (
+      countContentTypesActionPermissions(permission.action) > 0 &&
+      countContentTypesActionPermissions(permission.action) <
+        filteredContentTypes(permission.subjects).length
+    );
   };
 
   const hasAllActions = permission => {
-    if (!isAttributeAction(permission.action)) {
-      return (
-        countContentTypesActionPermissions(permission.action) ===
-        filteredContentTypes(permission.subjects).length
-      );
-    }
-
-    const numberOfPermission = getNumberOfPermissionByAction(permission.action);
-
-    return numberOfPermission === allAttributes.length;
+    return (
+      countContentTypesActionPermissions(permission.action) ===
+      filteredContentTypes(permission.subjects).length
+    );
   };
 
   const filteredContentTypes = useCallback(
@@ -91,7 +68,6 @@ const PermissionsHeader = ({ allAttributes, contentTypes }) => {
 };
 
 PermissionsHeader.propTypes = {
-  allAttributes: PropTypes.array.isRequired,
   contentTypes: PropTypes.array.isRequired,
 };
 

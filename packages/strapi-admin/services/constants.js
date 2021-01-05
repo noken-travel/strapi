@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = {
   SUPER_ADMIN_CODE: 'strapi-super-admin',
   EDITOR_CODE: 'strapi-editor',

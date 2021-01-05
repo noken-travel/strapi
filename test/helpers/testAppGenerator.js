@@ -1,5 +1,3 @@
-'use strict';
-
 const path = require('path');
 const rimraf = require('rimraf');
 const execa = require('execa');

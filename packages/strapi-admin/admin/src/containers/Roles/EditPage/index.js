@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useRouteMatch } from 'react-router-dom';
 import { get, has, isEmpty } from 'lodash';
-import { BaselineAlignment, useGlobalContext, request, difference } from 'strapi-helper-plugin';
+import { useGlobalContext, request, difference } from 'strapi-helper-plugin';
 import { Header } from '@buffetjs/custom';
 import { Padded } from '@buffetjs/core';
 import { Formik } from 'formik';
 import { useIntl } from 'react-intl';
+import BaselineAlignement from '../../../components/BaselineAlignement';
 import PageTitle from '../../../components/SettingsPageTitle';
 import ContainerFluid from '../../../components/ContainerFluid';
 import { Permissions, RoleForm } from '../../../components/Roles';
@@ -153,7 +154,7 @@ const EditPage = () => {
                 actions={headerActions(handleSubmit, handleReset)}
                 isLoading={isLayoutLoading || isRoleLoading}
               />
-              <BaselineAlignment top size="3px" />
+              <BaselineAlignement top size="3px" />
               <RoleForm
                 isLoading={isRoleLoading}
                 disabled={role.code === 'strapi-super-admin'}

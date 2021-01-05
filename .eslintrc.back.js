@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = {
   extends: [
     'eslint:recommended',
@@ -17,20 +15,8 @@ module.exports = {
     strapi: false,
   },
   rules: {
-    'node/no-unpublished-require': 'off',
-    'require-atomic-updates': 'off',
-    'no-process-exit': 'off',
-    strict: ['error', 'global'],
-    'import/order': 'error',
-    'import/no-cycle': 'error',
-    'import/no-useless-path-segments': 'error',
-    'import/first': 'error',
-    'import/extensions': ['error', 'never'],
-    'import/newline-after-import': 'error',
-    'node/exports-style': ['error', 'module.exports'],
-    'node/no-new-require': 'error',
-    'node/no-path-concat': 'error',
-    'node/no-callback-literal': 'error',
-    'node/handle-callback-err': 'error',
+    'node/no-unpublished-require': 0,
+    'require-atomic-updates': 0,
+    'no-process-exit': 0,
   },
 };

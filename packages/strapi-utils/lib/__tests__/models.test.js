@@ -1,5 +1,3 @@
-'use strict';
-
 const { getNature } = require('../models');
 
 describe('getNature', () => {

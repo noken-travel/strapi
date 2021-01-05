@@ -15,9 +15,9 @@ describe('ADMIN | COMPONENTS | USERS | MODALCREATEBODY | reducer', () => {
     it('should change the data correctly', () => {
       const initialState = {
         modifiedData: {
-          firstname: 'kai',
+          firstname: 'john',
           lastname: '',
-          email: 'kai@strapi.io',
+          email: 'john@strapi.io',
           roles: [1],
         },
         test: true,
@@ -29,9 +29,9 @@ describe('ADMIN | COMPONENTS | USERS | MODALCREATEBODY | reducer', () => {
       };
       const expected = {
         modifiedData: {
-          firstname: 'kai',
+          firstname: 'john',
           lastname: 'doe',
-          email: 'kai@strapi.io',
+          email: 'john@strapi.io',
           roles: [1],
         },
         test: true,

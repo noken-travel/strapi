@@ -1,5 +1,3 @@
-'use strict';
-
 const { escapeQuery, stringIncludes, stringEquals } = require('../string-formatting');
 
 describe('string-formatting', () => {

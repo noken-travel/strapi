@@ -2,7 +2,6 @@
 
 const _ = require('lodash');
 const { constants, isPrivateAttribute } = require('./content-types');
-
 const {
   ID_ATTRIBUTE,
   PUBLISHED_AT_ATTRIBUTE,
@@ -28,11 +27,7 @@ const sanitizeEntity = (dataSource, options) => {
   }
 
   if (_.isNil(model)) {
-    if (isOutput) {
-      return null;
-    } else {
-      return data;
-    }
+    return null;
   }
 
   const { attributes } = model;

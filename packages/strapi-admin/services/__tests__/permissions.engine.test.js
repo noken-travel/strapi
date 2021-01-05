@@ -21,8 +21,8 @@ describe('Permissions Engine', () => {
         title: 'admin',
         roles: [{ id: 1 }],
       },
-      kai: {
-        firstname: 'Kai',
+      john: {
+        firstname: 'John',
         title: 'admin',
         roles: [{ id: 3 }],
       },
@@ -225,7 +225,7 @@ describe('Permissions Engine', () => {
       let ability;
 
       beforeAll(async () => {
-        const user = getUser('kai');
+        const user = getUser('john');
         ability = await engine.generateUserAbility(user);
       });
 

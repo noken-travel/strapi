@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+
 const { registerAndLogin } = require('../../../test/helpers/auth');
 const { createAuthRequest } = require('../../../test/helpers/request');
 const createModelsUtils = require('../../../test/helpers/models');
@@ -10,15 +11,12 @@ let modelsUtils;
 let data = {
   dogs: [],
 };
+
 const dogModel = {
   draftAndPublish: false,
   attributes: {
     name: {
       type: 'string',
-    },
-    code: {
-      type: 'string',
-      unique: true,
     },
   },
   connection: 'default',
@@ -30,11 +28,9 @@ const dogModel = {
 const dogs = [
   {
     name: 'Nelson',
-    code: '1',
   },
   {
     name: 'Atos',
-    code: '2',
   },
 ];
 
@@ -55,7 +51,7 @@ describe('Migration - draft and publish', () => {
       for (const dog of dogs) {
         const res = await rq({
           method: 'POST',
-          url: '/content-manager/collection-types/application::dog.dog',
+          url: '/content-manager/explorer/application::dog.dog',
           body: dog,
         });
         createdDogs.push(res.body);
@@ -64,28 +60,22 @@ describe('Migration - draft and publish', () => {
     }, 60000);
 
     afterAll(async () => {
+      const queryString = data.dogs.map((p, i) => `${i}=${p.id}`).join('&');
       await rq({
-        method: 'POST',
-        url: `/content-manager/collection-types/application::dog.dog/actions/bulkDelete`,
-        body: {
-          ids: data.dogs.map(({ id }) => id),
-        },
+        method: 'DELETE',
+        url: `/content-manager/explorer/deleteAll/application::dog.dog?${queryString}`,
       });
-
       await modelsUtils.deleteContentTypes(['dog']);
     }, 60000);
 
     describe('Enabling D&P on a content-type', () => {
       test('No published_at before enabling the feature', async () => {
         let { body } = await rq({
-          url: '/content-manager/collection-types/application::dog.dog',
+          url: '/content-manager/explorer/application::dog.dog',
           method: 'GET',
         });
-
-        expect(body.results.length).toBe(2);
-
-        const sortedBody = sortDogs(body.results);
-
+        expect(body.length).toBe(2);
+        const sortedBody = sortDogs(body);
         sortedBody.forEach((dog, index) => {
           expect(dog).toMatchObject(data.dogs[index]);
           expect(dog.published_at).toBeUndefined();
@@ -94,7 +84,6 @@ describe('Migration - draft and publish', () => {
 
       test('Published_at is equal to created_at after enabling the feature', async () => {
         const schema = await modelsUtils.getContentTypeSchema('dog');
-
         await modelsUtils.modifyContentType({
           ...schema,
           attributes: _.merge(schema.attributes, tableModification1),
@@ -102,20 +91,17 @@ describe('Migration - draft and publish', () => {
         });
 
         let { body } = await rq({
+          url: '/content-manager/explorer/application::dog.dog',
           method: 'GET',
-          url: '/content-manager/collection-types/application::dog.dog',
         });
 
-        expect(body.results.length).toBe(2);
-
-        const sortedBody = sortDogs(body.results);
-
+        expect(body.length).toBe(2);
+        const sortedBody = sortDogs(body);
         sortedBody.forEach((dog, index) => {
           expect(dog).toMatchObject(data.dogs[index]);
           expect(dog.published_at).toBe(dog.createdAt || dog.created_at);
           expect(!isNaN(new Date(dog.published_at).valueOf())).toBe(true);
         });
-
         data.dogs = sortedBody;
       });
     });
@@ -123,49 +109,27 @@ describe('Migration - draft and publish', () => {
     describe('Disabling D&P on a content-type', () => {
       test('No published_at after disabling the feature + draft removed', async () => {
         const res = await rq({
+          url: `/content-manager/explorer/application::dog.dog/unpublish/${data.dogs[1].id}`,
           method: 'POST',
-          url: `/content-manager/collection-types/application::dog.dog/${data.dogs[1].id}/actions/unpublish`,
         });
-
         data.dogs[1] = res.body;
 
         const schema = await modelsUtils.getContentTypeSchema('dog');
-
         await modelsUtils.modifyContentType({
           ...schema,
           draftAndPublish: false,
           attributes: _.merge(schema.attributes, tableModification2),
         });
-
         // drafts should have been deleted with the migration, so we remove them
         data.dogs = data.dogs.filter(dog => !_.isNil(dog.published_at));
 
         let { body } = await rq({
-          url: '/content-manager/collection-types/application::dog.dog',
+          url: '/content-manager/explorer/application::dog.dog',
           method: 'GET',
         });
-
-        expect(body.results.length).toBe(1);
-        expect(body.results[0]).toMatchObject(_.pick(data.dogs[0], ['name']));
-        expect(body.results[0].published_at).toBeUndefined();
-      });
-      test('Unique constraint is kept after disabling the feature', async () => {
-        const dogToCreate = { code: 'sameCode' };
-        let res = await rq({
-          method: 'POST',
-          url: `/content-manager/collection-types/application::dog.dog/`,
-          body: dogToCreate,
-        });
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toMatchObject(dogToCreate);
-        data.dogs.push(res.body);
-
-        res = await rq({
-          method: 'POST',
-          url: `/content-manager/collection-types/application::dog.dog/`,
-          body: dogToCreate,
-        });
-        expect(res.statusCode).toBe(400);
+        expect(body.length).toBe(1);
+        expect(body[0]).toMatchObject(_.pick(data.dogs[0], ['name']));
+        expect(body[0].published_at).toBeUndefined();
       });
     });
   });

@@ -9,15 +9,14 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const util = require('util');
 const _ = require('lodash');
+const util = require('util');
 const {
   nameToSlug,
   contentTypes: contentTypesUtils,
   sanitizeEntity,
   webhook: webhookUtils,
 } = require('strapi-utils');
-
 const { MEDIA_UPDATE, MEDIA_CREATE, MEDIA_DELETE } = webhookUtils.webhookEvents;
 
 const { bytesToKbytes } = require('../utils/file');

@@ -166,10 +166,6 @@ const GlobalStyle = createGlobalStyle`
     scrollbar-width: thin;
   }
   /* stylelint-enable */
-
-  a::-moz-focus-inner {
-    border: 0;
-  }
 `;
 
 export default GlobalStyle;

@@ -4,7 +4,7 @@ import { Flex, Padded, Text } from '@buffetjs/core';
 import { useSelector } from 'react-redux';
 import { createSelector } from 'reselect';
 import { useIntl } from 'react-intl';
-import { BaselineAlignment } from 'strapi-helper-plugin';
+import BaselineAlignement from '../../components/BaselineAlignement';
 import Bloc from '../../components/Bloc';
 import PageTitle from '../../components/SettingsPageTitle';
 import makeSelectApp from '../App/selectors';
@@ -13,19 +13,14 @@ import { Detail, InfoText } from './components';
 
 const makeSelectAppInfos = () => createSelector(makeSelectApp(), appState => appState.appInfos);
 const makeSelectLatestRelease = () =>
-  createSelector(makeSelectAdmin(), adminState => ({
-    latestStrapiReleaseTag: adminState.latestStrapiReleaseTag,
-    shouldUpdateStrapi: adminState.shouldUpdateStrapi,
-  }));
+  createSelector(makeSelectAdmin(), adminState => adminState.latestStrapiReleaseTag);
 
 const ApplicationInfosPage = () => {
   const { formatMessage } = useIntl();
   const selectAppInfos = useMemo(makeSelectAppInfos, []);
   const selectLatestRealase = useMemo(makeSelectLatestRelease, []);
   const appInfos = useSelector(state => selectAppInfos(state));
-  const { shouldUpdateStrapi, latestStrapiReleaseTag } = useSelector(state =>
-    selectLatestRealase(state)
-  );
+  const latestStrapiReleaseTag = useSelector(state => selectLatestRealase(state));
 
   const currentPlan = appInfos.communityEdition
     ? 'app.components.UpgradePlanModal.text-ce'
@@ -43,8 +38,10 @@ const ApplicationInfosPage = () => {
   const nodeVersion = formatMessage({ id: 'Settings.application.node-version' });
   const editionTitle = formatMessage({ id: 'Settings.application.edition-title' });
 
+  const shouldShowUpgradeLink = `v${appInfos.strapiVersion}` !== latestStrapiReleaseTag;
+
   /* eslint-disable indent */
-  const upgradeLink = shouldUpdateStrapi
+  const upgradeLink = shouldShowUpgradeLink
     ? {
         label: upgradeLabel,
         href: `https://github.com/strapi/strapi/releases/tag/${latestStrapiReleaseTag}`,
@@ -56,7 +53,7 @@ const ApplicationInfosPage = () => {
     <div>
       <PageTitle name="Infos" />
       <Header {...headerProps} />
-      <BaselineAlignment top size="3px" />
+      <BaselineAlignement top size="3px" />
       <Bloc>
         <Padded left right top size="smd">
           <Padded left right top size="xs">
@@ -80,7 +77,7 @@ const ApplicationInfosPage = () => {
             </Padded>
           </Padded>
         </Padded>
-        <BaselineAlignment top size="60px" />
+        <BaselineAlignement top size="60px" />
       </Bloc>
     </div>
   );

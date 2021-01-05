@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = async (ctx, next) => {
   const pluginStore = strapi.store({
     environment: '',

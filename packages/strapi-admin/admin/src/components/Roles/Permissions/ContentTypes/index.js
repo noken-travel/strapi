@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Padded } from '@buffetjs/core';
 import ContentTypeRow from 'ee_else_ce/components/Roles/Permissions/ContentTypes/ContentTypesRow';
@@ -8,7 +8,20 @@ import Wrapper from './Wrapper';
 import { usePermissionsContext } from '../../../../hooks';
 
 const ContentTypesPermissions = ({ contentTypes, allContentTypesAttributes }) => {
-  const { permissionsLayout } = usePermissionsContext();
+  const { permissionsLayout, onSetAttributesPermissions } = usePermissionsContext();
+  const onSetAttributesPermissionsRef = useRef(onSetAttributesPermissions);
+
+  useEffect(() => {
+    if (allContentTypesAttributes.length > 0) {
+      const requiredAttributes = allContentTypesAttributes.filter(attribute => attribute.required);
+
+      onSetAttributesPermissionsRef.current({
+        attributes: requiredAttributes,
+        shouldEnable: true,
+        contentTypeAction: false,
+      });
+    }
+  }, [allContentTypesAttributes]);
 
   return (
     <Wrapper>

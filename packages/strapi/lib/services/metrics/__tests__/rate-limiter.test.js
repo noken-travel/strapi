@@ -1,5 +1,3 @@
-'use strict';
-
 const wrapWithRateLimiter = require('../rate-limiter');
 
 describe('Telemetry daily RateLimiter', () => {

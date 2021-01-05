@@ -1,5 +1,3 @@
-'use strict';
-
 const _ = require('lodash');
 
 const { registerAndLogin } = require('../../../../test/helpers/auth');
@@ -58,12 +56,10 @@ describe('Core API - Basic + draftAndPublish', () => {
 
   afterAll(async () => {
     // clean database
+    const queryString = data.products.map((p, i) => `${i}=${p.id}`).join('&');
     await rq({
-      method: 'POST',
-      url: `/content-manager/collection-types/application::product-with-dp.product-with-dp/actions/bulkDelete`,
-      body: {
-        ids: data.products.map(({ id }) => id),
-      },
+      method: 'DELETE',
+      url: `/content-manager/explorer/deleteAll/application::product-with-dp.product-with-dp?${queryString}`,
     });
     await modelsUtils.deleteComponent('default.compo');
     await modelsUtils.deleteContentTypes(['product-with-dp']);

@@ -49,11 +49,7 @@ const PermissionRow = ({
       {openedCategory === permissions.category && (
         <PermissionsWrapper isWhite={isWhite}>
           {permissions.subCategories.map(subCategory => (
-            <SubCategory
-              categoryName={categoryName}
-              key={subCategory.subCategory}
-              subCategory={subCategory}
-            />
+            <SubCategory key={subCategory.subCategory} subCategory={subCategory} />
           ))}
         </PermissionsWrapper>
       )}

@@ -1,7 +1,6 @@
 'use strict';
 
 const { contentTypes: contentTypesUtils } = require('strapi-utils');
-
 const {
   PUBLISHED_AT_ATTRIBUTE,
   CREATED_BY_ATTRIBUTE,

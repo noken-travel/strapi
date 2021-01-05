@@ -1,5 +1,3 @@
-'use strict';
-
 // Test an API with all the possible filed types and simple filterings (no deep filtering, no relations)
 
 const { registerAndLogin } = require('../../../test/helpers/auth');
@@ -95,6 +93,15 @@ async function createFixtures() {
   }
 }
 
+async function deleteFixtures() {
+  for (let product of data.products) {
+    await rq({
+      method: 'DELETE',
+      url: `/products/${product.id}`,
+    });
+  }
+}
+
 describe('Filtering API', () => {
   beforeAll(async () => {
     const token = await registerAndLogin();
@@ -102,12 +109,12 @@ describe('Filtering API', () => {
 
     modelsUtils = createModelsUtils({ rq });
     await modelsUtils.createContentTypes([product]);
-    await modelsUtils.cleanupContentTypes(['product']);
+    await modelsUtils.cleanupContentTypes([product]);
     await createFixtures();
   }, 60000);
 
   afterAll(async () => {
-    await modelsUtils.cleanupContentTypes(['product']);
+    await deleteFixtures();
     await modelsUtils.deleteContentTypes(['product']);
   }, 60000);
 

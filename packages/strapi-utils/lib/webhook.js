@@ -1,4 +1,4 @@
-'use strict';
+'use srict';
 
 const webhookEvents = {
   ENTRY_CREATE: 'entry.create',

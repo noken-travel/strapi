@@ -1,5 +1,3 @@
-'use strict';
-
 const { replaceIdByPrimaryKey } = require('../primary-key');
 
 describe('Primary Key', () => {

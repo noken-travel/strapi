@@ -10,7 +10,7 @@ import {
   ATTRIBUTES_PERMISSIONS_ACTIONS,
   isAttributeAction,
   getAttributePermissionsSizeByContentTypeAction,
-  getAllAttributesActions,
+  getAllAttributesActionsSize,
   getAttributesByModel,
 } from '../../../../../../../admin/src/components/Roles/Permissions/utils';
 import Chevron from '../../../../../../../admin/src/components/Roles/Permissions/ContentTypes/ContentTypesRow/Chevron';
@@ -28,10 +28,14 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
   const [modal, setModal] = useState({ isOpen: false, isMounted: false });
   const {
     collapsePath,
-    dispatch,
+    onCollapse,
     contentTypesPermissions,
     components,
+    onContentTypeActionSelect,
+    onAttributesSelect,
+    onAllContentTypeActions,
     isSuperAdmin,
+    onContentTypeConditionsSelect,
   } = usePermissionsContext();
   const isActive = collapsePath[0] === contentType.uid;
 
@@ -43,7 +47,7 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
     );
 
     return Object.keys(contentTypesActionObject).filter(
-      action => !!contentTypesActionObject[action] && !isAttributeAction(action)
+      action => !!contentTypesActionObject[action]
     );
   }, [contentType, contentTypesPermissions]);
 
@@ -52,18 +56,16 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
   }, [contentType, contentTypesPermissions]);
 
   const actionsForConditions = useMemo(() => {
-    const existingActions = getAllAttributesActions(contentType.uid, contentTypesPermissions);
-
-    return Array.from(new Set([...contentTypeActions, ...existingActions])).map(action => ({
+    return contentTypeActions.map(action => ({
       id: action,
       displayName: action.split('.')[action.split('.').length - 1],
     }));
-  }, [contentTypeActions, contentTypesPermissions, contentType]);
+  }, [contentTypeActions]);
 
   // Number of all actions in the current content type.
   const allCurrentActionsSize = useMemo(() => {
     return (
-      getAllAttributesActions(contentType.uid, contentTypesPermissions).length +
+      getAllAttributesActionsSize(contentType.uid, contentTypesPermissions) +
       contentTypeActions.length
     );
   }, [contentType, contentTypeActions.length, contentTypesPermissions]);
@@ -80,20 +82,17 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
     return getAttributesByModel(contentType, components);
   }, [contentType, components]);
 
-  const contentTypesActions = useMemo(() => {
-    return permissionsLayout.filter(
-      layout => layout.subjects.includes(contentType.uid) && !isAttributeAction(layout.action)
-    );
-  }, [contentType, permissionsLayout]);
+  const contentTypesActions = useMemo(
+    () => permissionsLayout.filter(layout => layout.subjects.includes(contentType.uid)),
+    [contentType, permissionsLayout]
+  );
 
   const allActionsSize = useMemo(() => {
     return attributes.length * ATTRIBUTES_PERMISSIONS_ACTIONS.length + contentTypesActions.length;
   }, [attributes, contentTypesActions]);
 
   const hasContentTypeAction = useCallback(
-    action =>
-      get(contentTypesPermissions, [contentType.uid, 'contentTypeActions', action], false) &&
-      !isAttributeAction(action),
+    action => get(contentTypesPermissions, [contentType.uid, 'contentTypeActions', action], false),
     [contentTypesPermissions, contentType]
   );
 
@@ -112,7 +111,7 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
     action => {
       const attributesPermissionsCount = getAttributesPermissions(action);
 
-      return attributesPermissionsCount === attributes.length;
+      return attributesPermissionsCount > 0 && attributesPermissionsCount === attributes.length;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [contentTypesPermissions, contentType, attributes]
@@ -124,10 +123,14 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
     action => {
       const attributesPermissionsCount = getAttributesPermissions(action);
 
-      return attributesPermissionsCount > 0 && attributesPermissionsCount < attributes.length;
+      return (
+        attributesPermissionsCount > 0 &&
+        attributesPermissionsCount < attributes.length &&
+        hasContentTypeAction(action)
+      );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [contentTypesPermissions, contentType, attributes]
+    [attributes, hasContentTypeAction]
   );
 
   const checkConditions = useCallback(
@@ -142,36 +145,30 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
   }, [conditions]);
 
   const handleToggleAttributes = () => {
-    dispatch({
-      type: 'COLLAPSE_PATH',
-      index: 0,
-      value: contentType.uid,
-    });
+    onCollapse(0, contentType.uid);
   };
 
   const handleActionSelect = action => {
-    dispatch({
-      type: 'SELECT_MULTIPLE_ATTRIBUTE',
-      subject: contentType.uid,
-      shouldEnable: !hasAllAttributeByAction(action),
-      attributes,
+    onAttributesSelect({
       action,
+      subject: contentType.uid,
+      attributes,
+      shouldEnable: !hasAllAttributeByAction(action) || !hasContentTypeAction(action),
+      hasContentTypeAction: true,
     });
   };
 
   const handleContentTypeActionSelect = action => {
-    dispatch({
-      type: 'CONTENT_TYPE_ACTION_SELECT',
-      subject: contentType.uid,
+    onContentTypeActionSelect({
       action,
+      subject: contentType.uid,
     });
   };
 
   // Check/Uncheck all the actions for all
   // attributes of the current content type
   const handleAllContentTypeActions = () => {
-    dispatch({
-      type: 'ALL_CONTENT_TYPE_PERMISSIONS_SELECT',
+    onAllContentTypeActions({
       subject: contentType.uid,
       attributes: getAttributesByModel(contentType, components),
       shouldEnable: allCurrentActionsSize < allActionsSize,
@@ -198,11 +195,7 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
   };
 
   const handleModalSubmit = conditions => {
-    dispatch({
-      type: 'ON_CONTENT_TYPE_CONDITIONS_SELECT',
-      subject: contentType.uid,
-      conditions,
-    });
+    onContentTypeConditionsSelect({ subject: contentType.uid, conditions });
   };
 
   const permissionsToDisplay = useMemo(() => {
@@ -217,13 +210,17 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
           <PermissionName disabled={isSuperAdmin}>
             <Checkbox
               onChange={handleAllContentTypeActions}
-              name={contentType.info.name}
+              name={contentType.name}
               disabled={isSuperAdmin}
-              someChecked={allCurrentActionsSize > 0 && allCurrentActionsSize < allActionsSize}
+              someChecked={
+                contentTypeActions.length > 0 &&
+                allCurrentActionsSize > 0 &&
+                allCurrentActionsSize < allActionsSize
+              }
               value={allCurrentActionsSize === allActionsSize}
             />
             <CollapseLabel
-              title={contentType.info.name}
+              title={contentType.name}
               alignItems="center"
               isCollapsable
               onClick={handleToggleAttributes}
@@ -236,37 +233,34 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
                 lineHeight="20px"
                 textTransform="uppercase"
               >
-                {contentType.info.name}
+                {contentType.name}
               </Text>
               <Chevron icon={isActive ? 'chevron-up' : 'chevron-down'} />
             </CollapseLabel>
           </PermissionName>
           <PermissionWrapper disabled={isSuperAdmin}>
-            {permissionsToDisplay.map(({ action }) => {
-              /* eslint-disable */
-              const checkboxProps = isAttributeAction(action)
-                ? {
-                    someChecked: hasSomeAttributeByAction(action),
-                    onChange: () => handleActionSelect(action),
-                  }
-                : {
-                    someChecked: null,
-                    onChange: () => handleContentTypeActionSelect(action),
-                  };
-              /* eslint-enable */
-
-              return (
+            {permissionsToDisplay.map(permissionLayout =>
+              !isAttributeAction(permissionLayout.action) ? (
                 <PermissionCheckbox
-                  key={`${contentType.info.name}-${action}`}
-                  hasConditions={checkConditions(action)}
+                  key={permissionLayout.action}
+                  hasConditions={checkConditions(permissionLayout.action)}
                   disabled={isSuperAdmin}
-                  value={hasAllAttributeByAction(action) || hasContentTypeAction(action)}
-                  name={`${contentType.info.name}-${action}`}
-                  onChange={() => handleContentTypeActionSelect(action)}
-                  {...checkboxProps}
+                  value={hasContentTypeAction(permissionLayout.action)}
+                  name={`${contentType.name}-${permissionLayout.action}`}
+                  onChange={() => handleContentTypeActionSelect(permissionLayout.action)}
                 />
-              );
-            })}
+              ) : (
+                <PermissionCheckbox
+                  key={permissionLayout.action}
+                  hasConditions={checkConditions(permissionLayout.action)}
+                  disabled={isSuperAdmin}
+                  value={hasContentTypeAction(permissionLayout.action)}
+                  someChecked={hasSomeAttributeByAction(permissionLayout.action)}
+                  name={`${contentType.name}-${permissionLayout.action}`}
+                  onChange={() => handleActionSelect(permissionLayout.action)}
+                />
+              )
+            )}
           </PermissionWrapper>
           <ConditionsButton
             isRight
@@ -290,10 +284,6 @@ const ContentTypeRow = ({ index, contentType, permissionsLayout }) => {
           onSubmit={handleModalSubmit}
           isOpen={modal.isOpen}
           onClosed={handleClosed}
-          headerBreadCrumbs={[
-            contentType.info.name,
-            'app.components.LeftMenuLinkContainer.settings',
-          ]}
         />
       )}
     </RowWrapper>

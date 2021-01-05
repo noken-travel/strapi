@@ -1,5 +1,3 @@
-'use strict';
-
 const checkReservedFilename = require('../check-reserved-filename');
 
 describe('check-reserved-filename', () => {

@@ -1,5 +1,5 @@
 import { get, pick } from 'lodash';
-import { CONTENT_MANAGER_PREFIX, isAttributeAction } from '../components/Roles/Permissions/utils';
+import { contentManagerPermissionPrefix } from '../components/Roles/Permissions/utils/permissonsConstantsActions';
 
 const formatPermissionsFromApi = data => {
   const getFieldsPermissions = (permissionsAcc, permission) => {
@@ -24,10 +24,8 @@ const formatPermissionsFromApi = data => {
   };
 
   const formattedPermissions = data.reduce((acc, current) => {
-    if (current.action.startsWith(CONTENT_MANAGER_PREFIX)) {
+    if (current.action.startsWith(contentManagerPermissionPrefix)) {
       const subjectAcc = get(acc, ['contentTypesPermissions', current.subject], {});
-
-      const isContentTypeAction = !isAttributeAction(current.action);
 
       return {
         ...acc,
@@ -41,7 +39,7 @@ const formatPermissionsFromApi = data => {
             },
             contentTypeActions: {
               ...subjectAcc.contentTypeActions,
-              ...(isContentTypeAction && { [current.action]: true }),
+              [current.action]: true,
             },
             conditions: {
               ...subjectAcc.conditions,

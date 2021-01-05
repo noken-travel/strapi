@@ -1,5 +1,3 @@
-'use strict';
-
 const request = require('request-promise-native');
 
 module.exports = function(initTime = 200) {

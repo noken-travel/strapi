@@ -10,30 +10,21 @@ describe('ADMIN | LeftMenu | utils', () => {
       const data = [
         {
           isDisplayed: true,
-
-          kind: 'collectionType',
+          label: 'Addresses',
+          schema: { modelType: 'contentType', kind: 'collectionType' },
           uid: 'application::address.address',
-          info: {
-            label: 'Addresses',
-          },
         },
         {
           isDisplayed: false,
-
-          kind: 'collectionType',
+          label: 'Test',
+          schema: { kind: 'collectionType' },
           uid: 'application::test.test',
-          info: {
-            label: 'Test',
-          },
         },
         {
           isDisplayed: true,
-
-          kind: 'singleType',
+          label: 'Test 1',
+          schema: { kind: 'singleType' },
           uid: 'application::test1.test1',
-          info: {
-            label: 'Test 1',
-          },
         },
       ];
 
@@ -89,29 +80,21 @@ describe('ADMIN | LeftMenu | utils', () => {
       const data = [
         {
           isDisplayed: true,
-          kind: 'collectionType',
+          label: 'Addresses',
+          schema: { modelType: 'contentType', kind: 'collectionType' },
           uid: 'application::address.address',
-          info: {
-            label: 'Addresses',
-          },
         },
         {
           isDisplayed: false,
-
-          kind: 'collectionType',
+          label: 'Test',
+          schema: { kind: 'collectionType' },
           uid: 'application::test.test',
-          info: {
-            label: 'Test',
-          },
         },
         {
           isDisplayed: true,
-
-          kind: 'singleType',
+          label: 'Test 1',
+          schema: { kind: 'singleType' },
           uid: 'application::test1.test1',
-          info: {
-            label: 'Test 1',
-          },
         },
       ];
 

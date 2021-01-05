@@ -24,7 +24,6 @@ import {
   request,
 } from 'strapi-helper-plugin';
 import { SETTINGS_BASE_URL, SHOW_TUTORIALS, STRAPI_UPDATE_NOTIF } from '../../config';
-import { checkLatestStrapiVersion } from '../../utils';
 
 import adminPermissions from '../../permissions';
 import Header from '../../components/Header/index';
@@ -136,9 +135,8 @@ export class Admin extends React.Component {
       const {
         data: { tag_name },
       } = await axios.get('https://api.github.com/repos/strapi/strapi/releases/latest');
-      const shouldUpdateStrapi = checkLatestStrapiVersion(strapiVersion, tag_name);
 
-      getStrapiLatestReleaseSucceeded(tag_name, shouldUpdateStrapi);
+      getStrapiLatestReleaseSucceeded(tag_name);
 
       const showUpdateNotif = !JSON.parse(localStorage.getItem('STRAPI_UPDATE_NOTIF'));
 
@@ -146,7 +144,7 @@ export class Admin extends React.Component {
         return;
       }
 
-      if (shouldUpdateStrapi) {
+      if (`v${strapiVersion}` !== tag_name) {
         strapi.notification.toggle({
           type: 'info',
           message: { id: 'notification.version.update.message' },
@@ -233,7 +231,7 @@ export class Admin extends React.Component {
 
   render() {
     const {
-      admin: { isLoading, shouldUpdateStrapi, userPermissions },
+      admin: { isLoading, latestStrapiReleaseTag, userPermissions },
       global: {
         autoReload,
         blockApp,
@@ -274,7 +272,7 @@ export class Admin extends React.Component {
         enableGlobalOverlayBlocker={enableGlobalOverlayBlocker}
         fetchUserPermissions={this.fetchUserPermissions}
         formatMessage={formatMessage}
-        shouldUpdateStrapi={shouldUpdateStrapi}
+        latestStrapiReleaseTag={latestStrapiReleaseTag}
         menu={this.menuRef.current}
         plugins={plugins}
         settingsBaseURL={SETTINGS_BASE_URL || '/settings'}
@@ -284,7 +282,7 @@ export class Admin extends React.Component {
         <UserProvider value={userPermissions}>
           <Wrapper>
             <LeftMenu
-              shouldUpdateStrapi={shouldUpdateStrapi}
+              latestStrapiReleaseTag={latestStrapiReleaseTag}
               version={strapiVersion}
               plugins={plugins}
               ref={this.menuRef}
@@ -345,7 +343,7 @@ Admin.propTypes = {
   admin: PropTypes.shape({
     appError: PropTypes.bool,
     isLoading: PropTypes.bool,
-    shouldUpdateStrapi: PropTypes.bool.isRequired,
+    latestStrapiReleaseTag: PropTypes.string.isRequired,
     userPermissions: PropTypes.array,
   }).isRequired,
   disableGlobalOverlayBlocker: PropTypes.func.isRequired,

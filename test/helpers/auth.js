@@ -1,5 +1,3 @@
-'use strict';
-
 const { createRequest } = require('./request');
 
 const auth = {

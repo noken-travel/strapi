@@ -30,19 +30,19 @@ import reducer, { initialState } from './reducer';
 import Loader from './Loader';
 import Wrapper from './Wrapper';
 
-const LeftMenu = forwardRef(({ shouldUpdateStrapi, version, plugins }, ref) => {
+const LeftMenu = forwardRef(({ latestStrapiReleaseTag, version, plugins }, ref) => {
   const location = useLocation();
   const permissions = useContext(UserContext);
   const { menu: settingsMenu } = useSettingsMenu(true);
 
   // TODO: this needs to be added to the settings API in the v4
   const settingsLinkNotificationCount = useMemo(() => {
-    if (shouldUpdateStrapi) {
+    if (`v${version}` !== latestStrapiReleaseTag) {
       return 1;
     }
 
     return 0;
-  }, [shouldUpdateStrapi]);
+  }, [latestStrapiReleaseTag, version]);
   const [
     {
       collectionTypesSectionLinks,
@@ -208,7 +208,7 @@ const LeftMenu = forwardRef(({ shouldUpdateStrapi, version, plugins }, ref) => {
 });
 
 LeftMenu.propTypes = {
-  shouldUpdateStrapi: PropTypes.bool.isRequired,
+  latestStrapiReleaseTag: PropTypes.string.isRequired,
   version: PropTypes.string.isRequired,
   plugins: PropTypes.object.isRequired,
 };

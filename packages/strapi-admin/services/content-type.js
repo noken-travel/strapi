@@ -2,8 +2,9 @@
 
 const _ = require('lodash');
 const fp = require('lodash/fp');
-const { contentTypes: contentTypesUtils } = require('strapi-utils');
 const actionDomain = require('../domain/action');
+
+const { contentTypes: contentTypesUtils } = require('strapi-utils');
 
 /**
  * Creates an array of paths to the fields and nested fields, without path nodes

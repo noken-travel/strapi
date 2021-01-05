@@ -19,10 +19,16 @@ const Border = styled.div`
   padding: 0px 10px;
 `;
 
-const SubCategory = ({ categoryName, subCategory }) => {
+const SubCategory = ({ subCategory }) => {
   const { formatMessage } = useIntl();
   const [modal, setModal] = useState({ isOpen: false, isMounted: false });
-  const { isSuperAdmin, pluginsAndSettingsPermissions, dispatch } = usePermissionsContext();
+  const {
+    isSuperAdmin,
+    pluginsAndSettingsPermissions,
+    onPluginSettingPermission,
+    onPluginSettingSubCategoryPermission,
+    onPluginSettingConditionsSelect,
+  } = usePermissionsContext();
 
   const checkPermission = useCallback(
     action => {
@@ -34,10 +40,7 @@ const SubCategory = ({ categoryName, subCategory }) => {
   );
 
   const handlePermission = action => {
-    dispatch({
-      type: 'ON_PLUGIN_SETTING_ACTION',
-      action,
-    });
+    onPluginSettingPermission(action);
   };
 
   const currentPermissions = useMemo(() => {
@@ -69,11 +72,10 @@ const SubCategory = ({ categoryName, subCategory }) => {
     return Object.values(categoryConditions).flat().length > 0;
   }, [categoryConditions]);
 
-  const handleSubCategoryPermissions = ({ target: { value } }) => {
-    dispatch({
-      type: 'ON_PLUGIN_SETTING_SUB_CATEGORY_ACTIONS',
+  const handleSubCategoryPermissions = () => {
+    onPluginSettingSubCategoryPermission({
       actions: subCategory.actions,
-      shouldEnable: value,
+      shouldEnable: !hasAllCategoryActions,
     });
   };
 
@@ -110,10 +112,7 @@ const SubCategory = ({ categoryName, subCategory }) => {
   );
 
   const handleConditionsSubmit = conditions => {
-    dispatch({
-      type: 'ON_PLUGIN_SETTING_CONDITIONS_SELECT',
-      conditions,
-    });
+    onPluginSettingConditionsSelect(conditions);
   };
 
   return (
@@ -176,7 +175,6 @@ const SubCategory = ({ categoryName, subCategory }) => {
           onToggle={handleToggleModal}
           isOpen={modal.isOpen}
           onClosed={handleClosed}
-          headerBreadCrumbs={[categoryName, subCategory.subCategory]}
         />
       )}
     </>
@@ -184,7 +182,6 @@ const SubCategory = ({ categoryName, subCategory }) => {
 };
 
 SubCategory.propTypes = {
-  categoryName: PropTypes.string.isRequired,
   subCategory: PropTypes.object.isRequired,
 };
 

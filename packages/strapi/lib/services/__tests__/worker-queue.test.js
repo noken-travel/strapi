@@ -1,5 +1,3 @@
-'use strict';
-
 const WorkerQueue = require('../worker-queue');
 
 describe('WorkerQueue', () => {

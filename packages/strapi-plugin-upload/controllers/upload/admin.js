@@ -1,10 +1,9 @@
 'use strict';
 
 const _ = require('lodash');
-const { contentTypes: contentTypesUtils } = require('strapi-utils');
 const validateSettings = require('../validation/settings');
 const validateUploadBody = require('../validation/upload');
-
+const { contentTypes: contentTypesUtils } = require('strapi-utils');
 const { CREATED_BY_ATTRIBUTE } = contentTypesUtils.constants;
 
 const ACTIONS = {
@@ -24,11 +23,11 @@ module.exports = {
       state: { userAbility },
     } = ctx;
 
-    const pm = strapi.admin.services.permission.createPermissionsManager({
-      ability: userAbility,
-      action: ACTIONS.read,
-      model: fileModel,
-    });
+    const pm = strapi.admin.services.permission.createPermissionsManager(
+      userAbility,
+      ACTIONS.read,
+      fileModel
+    );
 
     if (!pm.isAllowed) {
       return ctx.forbidden();
@@ -59,11 +58,11 @@ module.exports = {
   },
 
   async count(ctx) {
-    const pm = strapi.admin.services.permission.createPermissionsManager({
-      ability: ctx.state.userAbility,
-      action: ACTIONS.read,
-      model: fileModel,
-    });
+    const pm = strapi.admin.services.permission.createPermissionsManager(
+      ctx.state.userAbility,
+      ACTIONS.read,
+      fileModel
+    );
 
     if (!pm.isAllowed) {
       return ctx.forbidden();
@@ -173,11 +172,11 @@ module.exports = {
     } = ctx;
 
     const uploadService = strapi.plugins.upload.services.upload;
-    const pm = strapi.admin.services.permission.createPermissionsManager({
-      ability: userAbility,
-      action: ACTIONS.create,
-      model: fileModel,
-    });
+    const pm = strapi.admin.services.permission.createPermissionsManager(
+      userAbility,
+      ACTIONS.create,
+      fileModel
+    );
 
     if (!pm.isAllowed) {
       throw strapi.errors.forbidden();
@@ -197,7 +196,7 @@ const findEntityAndCheckPermissions = async (ability, action, model, id) => {
     throw strapi.errors.notFound();
   }
 
-  const pm = strapi.admin.services.permission.createPermissionsManager({ ability, action, model });
+  const pm = strapi.admin.services.permission.createPermissionsManager(ability, action, model);
 
   const roles = _.has(file, 'created_by.id')
     ? await strapi.query('role', 'admin').find({ 'users.id': file[CREATED_BY_ATTRIBUTE].id }, [])

@@ -6,7 +6,13 @@
  */
 
 module.exports = opts => {
-  const { strapiDependencies, additionalsDependencies, strapiVersion, projectName, uuid } = opts;
+  const {
+    strapiDependencies,
+    additionalsDependencies,
+    strapiVersion,
+    projectName,
+    uuid,
+  } = opts;
 
   // Finally, return the JSON.
   return {

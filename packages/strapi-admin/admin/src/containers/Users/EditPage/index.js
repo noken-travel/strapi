@@ -2,10 +2,11 @@ import React from 'react';
 import { useRouteMatch } from 'react-router-dom';
 import { useIntl } from 'react-intl';
 import { get, isEmpty } from 'lodash';
-import { BaselineAlignment, useGlobalContext, auth } from 'strapi-helper-plugin';
+import { useGlobalContext, auth } from 'strapi-helper-plugin';
 import { Col } from 'reactstrap';
 import { Padded } from '@buffetjs/core';
 import PropTypes from 'prop-types';
+import BaselineAlignement from '../../../components/BaselineAlignement';
 import PageTitle from '../../../components/SettingsPageTitle';
 import ContainerFluid from '../../../components/ContainerFluid';
 import FormBloc from '../../../components/FormBloc';
@@ -73,10 +74,10 @@ const EditPage = ({ canUpdate }) => {
               <Padded top bottom size="sm">
                 <MagicLink registrationToken={initialData.registrationToken} />
               </Padded>
-              <BaselineAlignment top size="1px" />
+              <BaselineAlignement top size="1px" />
             </>
           ) : (
-            <BaselineAlignment top size="3px" />
+            <BaselineAlignement top size="3px" />
           )}
 
           <FormBloc
@@ -99,7 +100,7 @@ const EditPage = ({ canUpdate }) => {
               );
             })}
           </FormBloc>
-          <BaselineAlignment top size="2px" />
+          <BaselineAlignement top size="2px" />
           <Padded top size="md">
             {!isLoading && (
               <FormBloc
@@ -114,7 +115,7 @@ const EditPage = ({ canUpdate }) => {
                       error={formErrors.roles}
                       value={get(modifiedData, 'roles', [])}
                     />
-                    <BaselineAlignment top size={hasRolesError ? '0' : '17px'} />
+                    <BaselineAlignement top size={hasRolesError ? '0' : '17px'} />
                   </Padded>
                 </Col>
               </FormBloc>

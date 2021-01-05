@@ -170,8 +170,10 @@ const getProfile = async (provider, query, callback) => {
       if (!tokenPayload) {
         callback(new Error('unable to decode jwt token'));
       } else {
+        // Combine username and discriminator because discord username is not unique
+        var username = `${tokenPayload['cognito:username']}`;
         callback(null, {
-          username: tokenPayload['cognito:username'],
+          username: username,
           email: tokenPayload.email,
         });
       }
@@ -466,7 +468,9 @@ const getProfile = async (provider, query, callback) => {
       break;
     }
     default:
-      callback(new Error('Unknown provider.'));
+      callback({
+        message: 'Unknown provider.',
+      });
       break;
   }
 };

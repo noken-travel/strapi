@@ -82,6 +82,7 @@ ssl
 nbproject
 public/uploads/*
 !public/uploads/.gitkeep
+.env
 
 ############################
 # Node.js
@@ -95,21 +96,19 @@ results
 node_modules
 .node_history
 
-############################
-# Tests
-############################
-
-testApp
-coverage
 
 ############################
 # Strapi
 ############################
 
-.env
-license.txt
+testApp
+coverage
+
 exports
+
 *.cache
-build
+
 documentation
+exports
+
 .strapi-updater.json

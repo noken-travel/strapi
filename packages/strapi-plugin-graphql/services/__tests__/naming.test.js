@@ -1,5 +1,3 @@
-'use strict';
-
 const { toPlural, toSingular, toInputName } = require('../naming');
 
 describe('Name util', () => {

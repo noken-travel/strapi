@@ -7,15 +7,7 @@ import { useIntl } from 'react-intl';
 import Separator from './Separator';
 import ActionRow from './ActionRow';
 
-const ConditionsModal = ({
-  actions,
-  headerBreadCrumbs,
-  initialConditions,
-  isOpen,
-  onClosed,
-  onSubmit,
-  onToggle,
-}) => {
+const ConditionsModal = ({ isOpen, onToggle, actions, onClosed, initialConditions, onSubmit }) => {
   const { formatMessage } = useIntl();
   const [conditions, setConditions] = useState(initialConditions);
 
@@ -33,7 +25,12 @@ const ConditionsModal = ({
 
   return (
     <Modal withoverflow="true" onClosed={onClosed} isOpen={isOpen} onToggle={onToggle}>
-      <ModalHeader headerBreadcrumbs={headerBreadCrumbs} />
+      <ModalHeader
+        headerBreadcrumbs={[
+          'Settings.permissions.conditions.links',
+          'app.components.LeftMenuLinkContainer.settings',
+        ]}
+      />
       <Padded top left right bottom size="md">
         <Text fontSize="lg" fontWeight="bold">
           {formatMessage({
@@ -79,11 +76,10 @@ ConditionsModal.defaultProps = {
 
 ConditionsModal.propTypes = {
   actions: PropTypes.array.isRequired,
-  headerBreadCrumbs: PropTypes.arrayOf(PropTypes.string).isRequired,
   initialConditions: PropTypes.object,
   isOpen: PropTypes.bool.isRequired,
-  onClosed: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   onToggle: PropTypes.func.isRequired,
+  onClosed: PropTypes.func.isRequired,
 };
 export default ConditionsModal;

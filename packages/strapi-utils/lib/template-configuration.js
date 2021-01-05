@@ -1,5 +1,3 @@
-'use strict';
-
 const { isString, isPlainObject } = require('lodash');
 
 const regex = /\$\{[^()]*\}/g;

@@ -8,7 +8,8 @@ import Notif from './Notif';
 import Wrapper from './Wrapper';
 
 const ApplicationDetailLink = () => {
-  const { shouldUpdateStrapi } = useGlobalContext();
+  const { latestStrapiReleaseTag, strapiVersion } = useGlobalContext();
+  const showNotif = `v${strapiVersion}` !== latestStrapiReleaseTag;
 
   return (
     <Wrapper>
@@ -17,7 +18,7 @@ const ApplicationDetailLink = () => {
         <Text lineHeight="34px">
           <FormattedMessage id="Settings.application.title" />
         </Text>
-        {shouldUpdateStrapi && <Notif />}
+        {showNotif && <Notif />}
       </Link>
     </Wrapper>
   );
