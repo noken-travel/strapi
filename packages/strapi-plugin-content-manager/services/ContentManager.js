@@ -8,8 +8,6 @@ const _ = require('lodash');
 module.exports = {
   fetchAll(params, query) {
     const { query: request, populate, ...filters } = query;
-    const forcePopulateNone = [];
-    console.warn(`[fetchAll] Skipping populate for ${model}`);
 
     const queryFilter = !_.isEmpty(request)
       ? {
@@ -18,10 +16,7 @@ module.exports = {
         }
       : filters;
 
-    return strapi.entityService.find(
-      { params: queryFilter, populate: forcePopulateNone },
-      { model: params.model }
-    );
+    return strapi.entityService.find({ params: queryFilter, populate }, { model: params.model });
   },
 
   fetch(params, populate) {
@@ -69,9 +64,8 @@ module.exports = {
 
   search(params, query) {
     const { model } = params;
-    const forcePopulateNone = [];
-    console.warn(`[search] Skipping populate for ${model}`);
-    return strapi.entityService.search({ params: query, populate: forcePopulateNone }, { model });
+
+    return strapi.entityService.search({ params: query }, { model });
   },
 
   countSearch(params, query) {
