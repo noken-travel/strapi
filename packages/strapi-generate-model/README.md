@@ -22,7 +22,7 @@ $ strapi generate:model group user
 
 ## Resources
 
-- [License](LICENSE)
+- [MIT License](LICENSE.md)
 
 ## Links
 

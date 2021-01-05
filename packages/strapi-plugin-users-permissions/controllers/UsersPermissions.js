@@ -32,6 +32,17 @@ module.exports = {
     }
   },
 
+  async deleteProvider(ctx) {
+    const { provider } = ctx.params;
+
+    if (!provider) {
+      return ctx.badRequest(null, [{ messages: [{ id: 'Bad request' }] }]);
+    }
+
+    // TODO handle dynamic
+    ctx.send({ ok: true });
+  },
+
   async deleteRole(ctx) {
     // Fetch public role.
     const publicRole = await strapi.query('role', 'users-permissions').findOne({ type: 'public' });
@@ -64,9 +75,13 @@ module.exports = {
 
   async getPermissions(ctx) {
     try {
+      const { lang } = ctx.query;
+      const plugins = await strapi.plugins[
+        'users-permissions'
+      ].services.userspermissions.getPlugins(lang);
       const permissions = await strapi.plugins[
         'users-permissions'
-      ].services.userspermissions.getActions();
+      ].services.userspermissions.getActions(plugins);
 
       ctx.send({ permissions });
     } catch (err) {
@@ -126,6 +141,12 @@ module.exports = {
   async index(ctx) {
     // Send 200 `ok`
     ctx.send({ message: 'ok' });
+  },
+
+  async init(ctx) {
+    const admins = await strapi.query('administrator', 'admin').find({ _limit: 1 });
+
+    ctx.send({ hasAdmin: admins.length > 0 });
   },
 
   async searchUsers(ctx) {
@@ -238,14 +259,6 @@ module.exports = {
         key: 'grant',
       })
       .get();
-
-    for (const provider in providers) {
-      if (provider !== 'email') {
-        providers[provider].redirectUri = strapi.plugins[
-          'users-permissions'
-        ].services.providers.buildRedirectUri(provider);
-      }
-    }
 
     ctx.send(providers);
   },

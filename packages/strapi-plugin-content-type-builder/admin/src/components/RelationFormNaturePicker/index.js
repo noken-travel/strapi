@@ -47,7 +47,6 @@ const RelationFormNaturePicker = ({
     ? oneThatIsCreatingARelationWithAnother
     : targetLabel;
   const leftDisplayedValue = pluralize(leftTarget, nature === 'manyToMany' ? 2 : 1);
-  const restrictedRelations = get(contentTypes, [target, 'schema', 'restrictRelationsTo'], null);
 
   const rightDisplayedValue = pluralize(
     rightTarget,
@@ -60,26 +59,21 @@ const RelationFormNaturePicker = ({
         <div className="nature-buttons">
           {relationsType.map(relationNature => {
             const Asset = relations[relationNature];
-            const isEnabled =
-              restrictedRelations === null || restrictedRelations.includes(relationNature);
 
             return (
               <Asset
                 key={relationNature}
                 isSelected={nature === relationNature}
-                style={{ cursor: isEnabled ? 'pointer' : 'not-allowed' }}
                 onClick={() => {
-                  if (isEnabled) {
-                    onChange({
-                      target: {
-                        name: 'nature',
-                        value: relationNature,
-                        targetContentType: target,
-                        oneThatIsCreatingARelationWithAnother,
-                        type: 'relation',
-                      },
-                    });
-                  }
+                  onChange({
+                    target: {
+                      name: 'nature',
+                      value: relationNature,
+                      targetContentType: target,
+                      oneThatIsCreatingARelationWithAnother,
+                      type: 'relation',
+                    },
+                  });
                 }}
               />
             );

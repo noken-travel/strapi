@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { IconLinks, Text } from '@buffetjs/core';
-import { CustomRow } from '@buffetjs/styles';
-import { useGlobalContext, PopUpWarning, CheckPermissions } from 'strapi-helper-plugin';
+import { IconLinks } from '@buffetjs/core';
+import { useGlobalContext, PopUpWarning } from 'strapi-helper-plugin';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import adminPermissions from '../../permissions';
+import Text from '../../components/Text';
+import CustomRow from './CustomRow';
 import LogoContainer from './Logo';
 
 const Row = ({ logo, name, description, isRequired, id, icon, onConfirm }) => {
@@ -24,18 +25,14 @@ const Row = ({ logo, name, description, isRequired, id, icon, onConfirm }) => {
 
   if (!isRequired) {
     links.push({
-      icon: (
-        <CheckPermissions permissions={adminPermissions.marketplace.uninstall}>
-          <FontAwesomeIcon icon={faTrashAlt} />
-        </CheckPermissions>
-      ),
+      icon: <FontAwesomeIcon icon={faTrashAlt} />,
       onClick: handleToggle,
     });
   }
 
   return (
     <CustomRow>
-      <td style={{ paddingTop: 0, width: 100, verticalAlign: 'bottom' }}>
+      <td style={{ paddingLeft: 30, paddingTop: 0, width: 100, verticalAlign: 'bottom' }}>
         <LogoContainer>
           {logo && <img src={logo} alt="icon" />}
           {!logo && (
@@ -46,7 +43,7 @@ const Row = ({ logo, name, description, isRequired, id, icon, onConfirm }) => {
         </LogoContainer>
       </td>
       <td>
-        <Text>
+        <p>
           <Text
             as="span"
             fontSize="xs"
@@ -62,7 +59,7 @@ const Row = ({ logo, name, description, isRequired, id, icon, onConfirm }) => {
               defaultMessage: description,
             })}
           </Text>
-        </Text>
+        </p>
       </td>
 
       <td>

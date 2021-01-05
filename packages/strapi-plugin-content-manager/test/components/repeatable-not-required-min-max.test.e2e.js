@@ -1,5 +1,3 @@
-'use strict';
-
 const { registerAndLogin } = require('../../../../test/helpers/auth');
 const createModelsUtils = require('../../../../test/helpers/models');
 const { createAuthRequest } = require('../../../../test/helpers/request');
@@ -8,11 +6,12 @@ let modelsUtils;
 let rq;
 
 describe.each([
-  ['CONTENT MANAGER', '/content-manager/collection-types/application::withcomponent.withcomponent'],
+  [
+    'CONTENT MANAGER',
+    '/content-manager/explorer/application::withcomponent.withcomponent',
+  ],
   ['GENERATED API', '/withcomponents'],
 ])('[%s] => Non repeatable and Not required component', (_, path) => {
-  const hasPagination = path.includes('/content-manager');
-
   beforeAll(async () => {
     const token = await registerAndLogin();
     const authRq = createAuthRequest(token);
@@ -73,8 +72,36 @@ describe.each([
       );
     });
 
+    test('Creating entry with formdata works', async () => {
+      const res = await rq.post('/', {
+        formData: {
+          data: JSON.stringify({
+            field: [
+              {
+                name: 'someValue',
+              },
+              {
+                name: 'someString',
+              },
+            ],
+          }),
+        },
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(Array.isArray(res.body.field)).toBe(true);
+      expect(res.body.field).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.anything(),
+            name: 'someValue',
+          }),
+        ])
+      );
+    });
+
     test.each(['someString', 128219, false, {}, null])(
-      'Throws if the field is not an array %p',
+      'Throws if the field is not an object %p',
       async value => {
         const res = await rq.post('/', {
           body: {
@@ -150,7 +177,7 @@ describe.each([
   });
 
   describe('GET entries', () => {
-    test('Data is ordered in the order sent', async () => {
+    test('Data is orderd in the order sent', async () => {
       const res = await rq.post('/', {
         body: {
           field: [
@@ -180,26 +207,6 @@ describe.each([
       const res = await rq.get('/');
 
       expect(res.statusCode).toBe(200);
-
-      if (hasPagination) {
-        expect(res.body.pagination).toBeDefined();
-        expect(Array.isArray(res.body.results)).toBe(true);
-        res.body.results.forEach(entry => {
-          expect(Array.isArray(entry.field)).toBe(true);
-
-          if (entry.field.length === 0) return;
-
-          expect(entry.field).toEqual(
-            expect.arrayContaining([
-              expect.objectContaining({
-                name: expect.any(String),
-              }),
-            ])
-          );
-        });
-        return;
-      }
-
       expect(Array.isArray(res.body)).toBe(true);
       res.body.forEach(entry => {
         expect(Array.isArray(entry.field)).toBe(true);

@@ -1,12 +1,10 @@
 {
-  "kind": "collectionType",
   "collectionName": "menus",
   "info": {
     "name": "menu",
     "description": ""
   },
   "options": {
-    "draftAndPublish": false,
     "increments": true,
     "timestamps": true,
     "comment": ""
@@ -16,8 +14,8 @@
       "type": "text"
     },
     "menusections": {
-      "via": "menu",
-      "collection": "menusection"
+      "collection": "menusection",
+      "via": "menu"
     },
     "restaurant": {
       "via": "menu",

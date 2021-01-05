@@ -12,7 +12,7 @@ This package is not meant to be used as a standalone module.
 
 ## Resources
 
-- [License](LICENSE)
+- [MIT License](LICENSE.md)
 
 ## Links
 

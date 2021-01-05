@@ -1,10 +1,6 @@
 {
   "parser": {
     "enabled": true,
-    "multipart": true,
-    "queryStringParser": {
-      "arrayLimit": 100,
-      "depth": 20
-    }
+    "multipart": true
   }
 }

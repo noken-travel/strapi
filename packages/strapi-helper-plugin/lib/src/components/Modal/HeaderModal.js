@@ -32,12 +32,7 @@ const HeaderModal = styled(ModalHeader)`
     position: absolute;
     top: 24px;
     right: 30px;
-    fill: ${({ fill }) => fill};
+    fill: #c3c5c8;
   }
 `;
-
-HeaderModal.defaultProps = {
-  fill: '#c3c5c8',
-};
-
 export default HeaderModal;

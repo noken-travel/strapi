@@ -1,5 +1,3 @@
-'use strict';
-
 // Test an API with all the possible filed types and simple filterings (no deep filtering, no relations)
 
 const { registerAndLogin } = require('../../../test/helpers/auth');
@@ -80,18 +78,18 @@ async function createFixtures() {
 
   await createCollector({
     name: 'Bernard',
-    age: 25,
+    age: '25',
     panini_cards: [data.paniniCards[0].id, data.paniniCards[1].id],
   });
   await createCollector({
     name: 'Isabelle',
-    age: 55,
+    age: '55',
     panini_cards: [data.paniniCards[0].id],
     collector_friends: [data.collectors[0].id],
   });
   await createCollector({
     name: 'Kenza',
-    age: 25,
+    age: '25',
     panini_cards: [],
     collector_friends: [data.collectors[0].id],
   });
@@ -175,13 +173,12 @@ describe('Deep Filtering API', () => {
       });
     });
   });
-
   describe('With search', () => {
     describe('Filter on a manyWay relation', () => {
       test('panini_cards.name + empty search', async () => {
         const res = await rq({
           method: 'GET',
-          url: '/collectors',
+          url: '/content-manager/explorer/application::collector.collector',
           qs: {
             'panini_cards.name': data.paniniCards[0].name,
             _q: '',
@@ -196,7 +193,7 @@ describe('Deep Filtering API', () => {
       test('panini_cards.name + _q=25', async () => {
         const res = await rq({
           method: 'GET',
-          url: '/collectors',
+          url: '/content-manager/explorer/application::collector.collector',
           qs: {
             'panini_cards.name': data.paniniCards[0].name,
             _q: 25,
@@ -213,7 +210,7 @@ describe('Deep Filtering API', () => {
       test('collector_friends.name + empty search', async () => {
         const res = await rq({
           method: 'GET',
-          url: '/collectors',
+          url: '/content-manager/explorer/application::collector.collector',
           qs: {
             'collector_friends.name': data.collectors[0].name,
             _q: '',
@@ -227,7 +224,7 @@ describe('Deep Filtering API', () => {
       test('collector_friends.name + search isa', async () => {
         const res = await rq({
           method: 'GET',
-          url: '/collectors',
+          url: '/content-manager/explorer/application::collector.collector',
           qs: {
             'collector_friends.name': data.collectors[0].name,
             _q: 'isa',

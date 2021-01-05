@@ -1,10 +1,10 @@
-import React, { useCallback, useReducer, useRef, useState, useEffect } from 'react';
-import { get, includes, toString, isEqual, intersectionWith } from 'lodash';
+import React, { useReducer, useRef, useState, useEffect } from 'react';
+import { includes, toString, isEqual, intersectionWith } from 'lodash';
 import { useHistory, useLocation } from 'react-router-dom';
 import { Header } from '@buffetjs/custom';
-import { Button } from '@buffetjs/core';
 import {
   PopUpWarning,
+  LoadingIndicator,
   useGlobalContext,
   generateFiltersFromSearch,
   generateSearchFromFilters,
@@ -15,20 +15,15 @@ import { formatFileForEditing, getRequestUrl, getTrad, getFileModelTimestamps } 
 import Container from '../../components/Container';
 import HomePageContent from './HomePageContent';
 import Padded from '../../components/Padded';
-import { useAppContext } from '../../hooks';
 import ModalStepper from '../ModalStepper';
 import { generateStringFromParams, getHeaderLabel } from './utils';
 import init from './init';
 import reducer, { initialState } from './reducer';
 
 const HomePage = () => {
-  const { allowedActions } = useAppContext();
-  const { canRead } = allowedActions;
   const { formatMessage, plugins } = useGlobalContext();
   const [, updated_at] = getFileModelTimestamps(plugins);
-  const [reducerState, dispatch] = useReducer(reducer, initialState, () =>
-    init(initialState, allowedActions)
-  );
+  const [reducerState, dispatch] = useReducer(reducer, initialState, init);
   const query = useQuery();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -38,14 +33,7 @@ const HomePage = () => {
   const { push } = useHistory();
   const { search } = useLocation();
   const isMounted = useRef(true);
-  const {
-    data,
-    dataCount,
-    dataToDelete,
-    isLoading,
-    shouldRefetchData,
-    showModalConfirmButtonLoading,
-  } = reducerState.toJS();
+  const { data, dataCount, dataToDelete, isLoading } = reducerState.toJS();
   const pluginName = formatMessage({ id: getTrad('plugin.name') });
   const paramsKeys = ['_limit', '_start', '_q', '_sort'];
 
@@ -66,12 +54,10 @@ const HomePage = () => {
       await request(requestURL, {
         method: 'DELETE',
       });
-
-      return Promise.resolve();
     } catch (err) {
-      const errorMessage = get(err, 'response.payload.message', 'An error occured');
-
-      return Promise.reject(errorMessage);
+      if (isMounted.current) {
+        strapi.notification.error('notification.error');
+      }
     }
   };
 
@@ -92,10 +78,7 @@ const HomePage = () => {
     } catch (err) {
       if (isMounted.current) {
         dispatch({ type: 'GET_DATA_ERROR' });
-        strapi.notification.toggle({
-          type: 'warning',
-          message: { id: 'notification.error' },
-        });
+        strapi.notification.error('notification.error');
       }
     }
 
@@ -115,10 +98,7 @@ const HomePage = () => {
     } catch (err) {
       if (isMounted.current) {
         dispatch({ type: 'GET_DATA_ERROR' });
-        strapi.notification.toggle({
-          type: 'warning',
-          message: { id: 'notification.error' },
-        });
+        strapi.notification.error('notification.error');
       }
     }
 
@@ -126,18 +106,16 @@ const HomePage = () => {
   };
 
   const fetchListData = async () => {
-    if (canRead) {
-      dispatch({ type: 'GET_DATA' });
+    dispatch({ type: 'GET_DATA' });
 
-      const [data, count] = await Promise.all([fetchData(), fetchDataCount()]);
+    const [data, count] = await Promise.all([fetchData(), fetchDataCount()]);
 
-      if (isMounted.current) {
-        dispatch({
-          type: 'GET_DATA_SUCCEEDED',
-          data,
-          count,
-        });
-      }
+    if (isMounted.current) {
+      dispatch({
+        type: 'GET_DATA_SUCCEEDED',
+        data,
+        count,
+      });
     }
   };
 
@@ -193,13 +171,11 @@ const HomePage = () => {
   };
 
   const handleClickEditFile = id => {
-    if (allowedActions.canUpdate) {
-      const file = formatFileForEditing(data.find(file => toString(file.id) === toString(id)));
+    const file = formatFileForEditing(data.find(file => toString(file.id) === toString(id)));
 
-      setFileToEdit(file);
-      setModalInitialStep('edit');
-      handleClickToggleModal();
-    }
+    setFileToEdit(file);
+    setModalInitialStep('edit');
+    handleClickToggleModal();
   };
 
   const handleClickToggleModal = (refetch = false) => {
@@ -223,37 +199,46 @@ const HomePage = () => {
     push({ search: newSearch });
   };
 
-  const handleConfirmDeleteMedias = useCallback(async () => {
-    dispatch({ type: 'ON_DELETE_MEDIAS' });
+  const handleDeleteMediaFromModal = async id => {
+    handleClickToggleModal();
+
+    lockAppWithOverlay();
+
+    try {
+      await deleteMedia(id);
+
+      strapi.notification.success('notification.success.delete');
+
+      dispatch({
+        type: 'ON_DELETE_MEDIA_SUCCEEDED',
+        mediaId: id,
+      });
+    } catch (err) {
+      // Silent
+    } finally {
+      strapi.unlockApp();
+    }
+  };
+
+  const handleDeleteMedias = async () => {
+    setIsPopupOpen(false);
+
+    lockAppWithOverlay();
 
     try {
       await Promise.all(dataToDelete.map(item => deleteMedia(item.id)));
 
       dispatch({
-        type: 'ON_DELETE_MEDIAS_SUCCEEDED',
-      });
-    } catch (err) {
-      strapi.notification.toggle({
-        type: 'warning',
-        message: err,
+        type: 'CLEAR_DATA_TO_DELETE',
       });
 
-      dispatch({
-        type: 'ON_DELETE_MEDIAS_ERROR',
-      });
-    } finally {
-      setIsPopupOpen(false);
-    }
-  }, [dataToDelete]);
-
-  const handleClosedModalDeleteAll = useCallback(() => {
-    if (shouldRefetchData) {
       fetchListData();
-    } else {
-      dispatch({ type: 'RESET_DATA_TO_DELETE' });
+    } catch (error) {
+      // Silent
+    } finally {
+      strapi.unlockApp();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldRefetchData]);
+  };
 
   const handleModalClose = () => {
     resetModalState();
@@ -270,6 +255,15 @@ const HomePage = () => {
     });
   };
 
+  const lockAppWithOverlay = () => {
+    const overlayblockerParams = {
+      children: <div />,
+      noGradient: true,
+    };
+
+    strapi.lockApp(overlayblockerParams);
+  };
+
   const resetModalState = () => {
     setModalInitialStep('browse');
     setFileToEdit(null);
@@ -279,16 +273,12 @@ const HomePage = () => {
     title: {
       label: pluginName,
     },
-    /* eslint-disable indent */
-    content: canRead
-      ? formatMessage(
-          {
-            id: getTrad(getHeaderLabel(dataCount)),
-          },
-          { number: dataCount }
-        )
-      : null,
-    /* eslint-enable indent */
+    content: formatMessage(
+      {
+        id: getTrad(getHeaderLabel(dataCount)),
+      },
+      { number: dataCount }
+    ),
     actions: [
       {
         disabled: dataToDelete.length === 0,
@@ -297,13 +287,6 @@ const HomePage = () => {
         label: formatMessage({ id: 'app.utils.delete' }),
         onClick: () => setIsPopupOpen(true),
         type: 'button',
-        Component: buttonProps => {
-          if (!allowedActions.canUpdate) {
-            return null;
-          }
-
-          return <Button {...buttonProps} />;
-        },
       },
       {
         disabled: false,
@@ -311,59 +294,45 @@ const HomePage = () => {
         label: formatMessage({ id: getTrad('header.actions.upload-assets') }),
         onClick: () => handleClickToggleModal(),
         type: 'button',
-        Component: buttonProps => {
-          if (!allowedActions.canCreate) {
-            return null;
-          }
-
-          return <Button {...buttonProps} />;
-        },
       },
     ],
   };
 
-  const handleRemoveFileFromDataToDelete = useCallback(id => {
-    dispatch({
-      type: 'ON_CHANGE_DATA_TO_DELETE',
-      id,
-    });
-  }, []);
-
-  const content = canRead ? (
-    <HomePageContent
-      data={data}
-      dataCount={dataCount}
-      dataToDelete={dataToDelete}
-      isLoading={isLoading}
-      onCardCheck={handleChangeCheck}
-      onCardClick={handleClickEditFile}
-      onClick={handleClickToggleModal}
-      onFilterDelete={handleDeleteFilter}
-      onParamsChange={handleChangeParams}
-      onSelectAll={handleSelectAll}
-    />
-  ) : null;
-
   return (
     <Container>
       <Header {...headerProps} isLoading={isLoading} />
-      {content}
+      {isLoading ? (
+        <>
+          <Padded top bottom size="lg" />
+          <LoadingIndicator />
+        </>
+      ) : (
+        <HomePageContent
+          data={data}
+          dataCount={dataCount}
+          dataToDelete={dataToDelete}
+          onCardCheck={handleChangeCheck}
+          onCardClick={handleClickEditFile}
+          onClick={handleClickToggleModal}
+          onFilterDelete={handleDeleteFilter}
+          onParamsChange={handleChangeParams}
+          onSelectAll={handleSelectAll}
+        />
+      )}
       <ModalStepper
         initialFileToEdit={fileToEdit}
         initialStep={modalInitialStep}
         isOpen={isModalOpen}
         onClosed={handleModalClose}
-        onRemoveFileFromDataToDelete={handleRemoveFileFromDataToDelete}
+        onDeleteMedia={handleDeleteMediaFromModal}
         onToggle={handleClickToggleModal}
         refetchData={fetchListData}
       />
       <PopUpWarning
         isOpen={isPopupOpen}
-        isConfirmButtonLoading={showModalConfirmButtonLoading}
-        onConfirm={handleConfirmDeleteMedias}
-        onClosed={handleClosedModalDeleteAll}
         toggleModal={handleClickTogglePopup}
         popUpWarningType="danger"
+        onConfirm={handleDeleteMedias}
       />
       <Padded bottom size="md" />
       <Padded bottom size="md" />

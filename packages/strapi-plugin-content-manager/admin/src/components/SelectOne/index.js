@@ -1,11 +1,10 @@
 import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 import { get, isNull } from 'lodash';
+
 import Select from 'react-select';
-import SingleValue from './SingleValue';
 
 function SelectOne({
-  components,
   mainField,
   name,
   isDisabled,
@@ -21,12 +20,10 @@ function SelectOne({
 }) {
   return (
     <Select
-      components={{ ...components, SingleValue }}
       id={name}
       isClearable
       isDisabled={isDisabled}
       isLoading={isLoading}
-      mainField={mainField}
       options={options}
       onChange={onChange}
       onInputChange={onInputChange}
@@ -34,26 +31,19 @@ function SelectOne({
       onMenuScrollToBottom={onMenuScrollToBottom}
       placeholder={placeholder}
       styles={styles}
-      value={isNull(value) ? null : { label: get(value, [mainField.name], ''), value }}
+      value={isNull(value) ? null : { label: get(value, [mainField], ''), value }}
     />
   );
 }
 
 SelectOne.defaultProps = {
-  components: {},
   value: null,
 };
 
 SelectOne.propTypes = {
-  components: PropTypes.object,
   isDisabled: PropTypes.bool.isRequired,
   isLoading: PropTypes.bool.isRequired,
-  mainField: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    schema: PropTypes.shape({
-      type: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
+  mainField: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   onInputChange: PropTypes.func.isRequired,

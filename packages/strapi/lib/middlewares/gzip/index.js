@@ -12,8 +12,7 @@ module.exports = strapi => {
      */
 
     initialize() {
-      const { options = {} } = strapi.config.middleware.settings.gzip;
-      strapi.app.use(compress(options));
+      strapi.app.use(compress());
     },
   };
 };

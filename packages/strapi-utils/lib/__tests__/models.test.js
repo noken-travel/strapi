@@ -1,5 +1,3 @@
-'use strict';
-
 const { getNature } = require('../models');
 
 describe('getNature', () => {
@@ -15,11 +13,6 @@ describe('getNature', () => {
             },
           },
           modelName: {},
-        },
-        db: {
-          getModelsByPluginName() {
-            return strapi.models;
-          },
         },
         plugins: {},
       };
@@ -55,11 +48,6 @@ describe('getNature', () => {
                 model: 'baseModel',
               },
             },
-          },
-        },
-        db: {
-          getModelsByPluginName() {
-            return strapi.models;
           },
         },
         plugins: {},

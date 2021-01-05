@@ -1,5 +1,3 @@
-'use strict';
-
 const createMiddleware = require('../middleware');
 
 describe('Metrics middleware', () => {

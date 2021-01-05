@@ -61,7 +61,7 @@ const buildMutation = (mutationName, config) => {
 const buildMutationContext = ({ options, graphqlContext }) => {
   const { context } = graphqlContext;
 
-  const ctx = cloneKoaContext(context);
+  const ctx = context.app.createContext(_.clone(context.req), _.clone(context.res));
 
   if (options.input && options.input.where) {
     ctx.params = convertToParams(options.input.where || {});
@@ -134,20 +134,14 @@ const validateResolverOption = config => {
   return true;
 };
 
-const cloneKoaContext = ctx => {
-  return Object.assign(ctx.app.createContext(_.clone(ctx.req), _.clone(ctx.res)), {
-    state: {
-      ...ctx.state,
-    },
-  });
-};
-
 const buildQueryContext = ({ options, graphqlContext }) => {
   const { context } = graphqlContext;
   const _options = _.cloneDeep(options);
 
-  const ctx = cloneKoaContext(context);
+  const ctx = context.app.createContext(_.clone(context.req), _.clone(context.res));
 
+  // Note: we've to used the Object.defineProperties to reset the prototype. It seems that the cloning the context
+  // cause a lost of the Object prototype.
   const opts = amountLimiting(_options);
 
   ctx.query = {
@@ -163,6 +157,7 @@ const buildQueryContext = ({ options, graphqlContext }) => {
 /**
  * Checks if a resolverPath (resolver or resovlerOf) might be resolved
  */
+
 const getPolicies = config => {
   const { resolver, policies = [], resolverOf } = config;
 

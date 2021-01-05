@@ -7,12 +7,6 @@
  */
 
 const _ = require('lodash');
-const { contentTypes } = require('strapi-utils');
-
-const {
-  hasDraftAndPublish,
-  constants: { DP_PUB_STATE_LIVE },
-} = contentTypes;
 
 const DynamicZoneScalar = require('../types/dynamiczoneScalar');
 
@@ -24,36 +18,12 @@ const { toSingular, toPlural } = require('./naming');
 const { buildQuery, buildMutation } = require('./resolvers-builder');
 const { actionExists } = require('./utils');
 
-const OPTIONS = Symbol();
-
-const FIND_QUERY_ARGUMENTS = `(sort: String, limit: Int, start: Int, where: JSON, publicationState: PublicationState)`;
-const FIND_ONE_QUERY_ARGUMENTS = `(id: ID!, publicationState: PublicationState)`;
-
-const assignOptions = (element, parent) => {
-  if (Array.isArray(element)) {
-    return element.map(el => assignOptions(el, parent));
-  }
-
-  return _.set(element, OPTIONS, _.get(parent, OPTIONS, {}));
-};
-
 const isQueryEnabled = (schema, name) => {
   return _.get(schema, `resolver.Query.${name}`) !== false;
 };
 
 const isMutationEnabled = (schema, name) => {
   return _.get(schema, `resolver.Mutation.${name}`) !== false;
-};
-
-const isNotPrivate = _.curry((model, attributeName) => {
-  return !contentTypes.isPrivateAttribute(model, attributeName);
-});
-
-const wrapPublicationStateResolver = query => async (parent, args, ctx, ast) => {
-  const results = await query(parent, args, ctx, ast);
-
-  const queryOptions = _.pick(args, 'publicationState');
-  return assignOptions(results, { [OPTIONS]: queryOptions });
 };
 
 const buildTypeDefObj = model => {
@@ -72,7 +42,7 @@ const buildTypeDefObj = model => {
   }
 
   Object.keys(attributes)
-    .filter(isNotPrivate(model))
+    .filter(attributeName => attributes[attributeName].private !== true)
     .forEach(attributeName => {
       const attribute = attributes[attributeName];
       // Convert our type to the GraphQL type.
@@ -86,7 +56,7 @@ const buildTypeDefObj = model => {
   // Change field definition for collection relations
   associations
     .filter(association => association.type === 'collection')
-    .filter(association => isNotPrivate(model, association.alias))
+    .filter(association => attributes[association.alias].private !== true)
     .forEach(association => {
       typeDef[`${association.alias}(sort: String, limit: Int, start: Int, where: JSON)`] =
         typeDef[association.alias];
@@ -158,119 +128,89 @@ const generateDynamicZoneDefinitions = (attributes, globalId, schema) => {
     });
 };
 
-const initQueryOptions = (targetModel, parent) => {
-  if (hasDraftAndPublish(targetModel)) {
-    return {
-      _publicationState: _.get(parent, [OPTIONS, 'publicationState'], DP_PUB_STATE_LIVE),
-    };
-  }
-
-  return {};
-};
-
 const buildAssocResolvers = model => {
+  const contentManager = strapi.plugins['content-manager'].services['contentmanager'];
+
   const { primaryKey, associations = [] } = model;
 
   return associations
-    .filter(association => isNotPrivate(model, association.alias))
+    .filter(association => model.attributes[association.alias].private !== true)
     .reduce((resolver, association) => {
       const target = association.model || association.collection;
       const targetModel = strapi.getModel(target, association.plugin);
 
-      const { nature, alias } = association;
-
-      switch (nature) {
+      switch (association.nature) {
         case 'oneToManyMorph':
         case 'manyMorphToOne':
         case 'manyMorphToMany':
         case 'manyToManyMorph': {
-          resolver[alias] = async obj => {
-            if (obj[alias]) {
-              return assignOptions(obj[alias], obj);
+          resolver[association.alias] = async obj => {
+            if (obj[association.alias]) {
+              return obj[association.alias];
             }
 
-            const params = {
-              ...initQueryOptions(targetModel, obj),
-              id: obj[primaryKey],
-            };
+            const entry = await contentManager.fetch(
+              {
+                id: obj[primaryKey],
+                model: model.uid,
+              },
+              [association.alias]
+            );
 
-            const entry = await strapi.query(model.uid).findOne(params, [alias]);
-
-            return assignOptions(entry[alias], obj);
+            return entry[association.alias];
           };
           break;
         }
         default: {
-          resolver[alias] = async (obj, options) => {
-            const loader = strapi.plugins.graphql.services['data-loaders'].loaders[targetModel.uid];
-
-            const localId = obj[model.primaryKey];
-            const targetPK = targetModel.primaryKey;
-            const foreignId = _.get(obj[alias], targetModel.primaryKey, obj[alias]);
-
+          resolver[association.alias] = async (obj, options) => {
+            // Construct parameters object to retrieve the correct related entries.
             const params = {
-              ...initQueryOptions(targetModel, obj),
-              ...convertToParams(_.omit(amountLimiting(options), 'where')),
-              ...convertToQuery(options.where),
+              model: targetModel.uid,
             };
 
-            if (['oneToOne', 'oneWay', 'manyToOne'].includes(nature)) {
-              if (!_.has(obj, alias) || _.isNil(foreignId)) {
-                return null;
-              }
+            let queryOpts = {};
 
-              // check this is an entity and not a mongo ID
-              if (_.has(obj[alias], targetPK)) {
-                return assignOptions(obj[alias], obj);
-              }
-
-              const query = {
-                single: true,
-                filters: {
-                  ...params,
-                  [targetPK]: foreignId,
-                },
+            if (association.type === 'model') {
+              params[targetModel.primaryKey] = _.get(
+                obj,
+                `${association.alias}.${targetModel.primaryKey}`,
+                obj[association.alias]
+              );
+            } else {
+              const queryParams = amountLimiting(options);
+              queryOpts = {
+                ...queryOpts,
+                ...convertToParams(_.omit(queryParams, 'where')), // Convert filters (sort, limit and start/skip)
+                ...convertToQuery(queryParams.where),
               };
 
-              return loader.load(query).then(r => assignOptions(r, obj));
-            }
-
-            if (['oneToMany', 'manyToMany'].includes(nature)) {
-              const { via } = association;
-
-              const filters = {
-                ...params,
-                [`${via}.id`]: localId,
-              };
-
-              return loader.load({ filters }).then(r => assignOptions(r, obj));
-            }
-
-            if (nature === 'manyWay') {
-              let targetIds = [];
-
-              // find the related ids to query them and apply the filters
-              if (Array.isArray(obj[alias])) {
-                targetIds = obj[alias].map(value => value[targetPK] || value);
+              if (
+                ((association.nature === 'manyToMany' && association.dominant) ||
+                  association.nature === 'manyWay') &&
+                _.has(obj, association.alias) // if populated
+              ) {
+                _.set(
+                  queryOpts,
+                  ['query', targetModel.primaryKey],
+                  obj[association.alias]
+                    ? obj[association.alias].map(val => val[targetModel.primaryKey] || val).sort()
+                    : []
+                );
               } else {
-                const entry = await strapi
-                  .query(model.uid)
-                  .findOne({ [primaryKey]: obj[primaryKey] }, [alias]);
-
-                if (_.isEmpty(entry[alias])) {
-                  return [];
-                }
-
-                targetIds = entry[alias].map(el => el[targetPK]);
+                _.set(queryOpts, ['query', association.via], obj[targetModel.primaryKey]);
               }
-
-              const filters = {
-                ...params,
-                [`${targetPK}_in`]: targetIds.map(_.toString),
-              };
-
-              return loader.load({ filters }).then(r => assignOptions(r, obj));
             }
+
+            return association.model
+              ? strapi.plugins.graphql.services['data-loaders'].loaders[targetModel.uid].load({
+                  params,
+                  options: queryOpts,
+                  single: true,
+                })
+              : strapi.plugins.graphql.services['data-loaders'].loaders[targetModel.uid].load({
+                  options: queryOpts,
+                  association,
+                });
           };
           break;
         }
@@ -360,18 +300,17 @@ const buildSingleType = model => {
   }
 
   if (isQueryEnabled(_schema, singularName)) {
-    const resolver = buildQuery(singularName, {
-      resolver: `${uid}.find`,
-      ..._.get(_schema, `resolver.Query.${singularName}`, {}),
-    });
-
     _.merge(localSchema, {
       query: {
-        [`${singularName}(publicationState: PublicationState)`]: model.globalId,
+        // TODO: support all the unique fields
+        [singularName]: model.globalId,
       },
       resolvers: {
         Query: {
-          [singularName]: wrapPublicationStateResolver(resolver),
+          [singularName]: buildQuery(singularName, {
+            resolver: `${uid}.find`,
+            ..._.get(_schema, `resolver.Query.${singularName}`, {}),
+          }),
         },
       },
     });
@@ -437,15 +376,13 @@ const buildCollectionType = model => {
       ..._.get(_schema, `resolver.Query.${singularName}`, {}),
     };
     if (actionExists(resolverOpts)) {
-      const resolver = buildQuery(singularName, resolverOpts);
       _.merge(localSchema, {
         query: {
-          // TODO: support all the unique fields
-          [`${singularName}${FIND_ONE_QUERY_ARGUMENTS}`]: model.globalId,
+          [`${singularName}(id: ID!)`]: model.globalId,
         },
         resolvers: {
           Query: {
-            [singularName]: wrapPublicationStateResolver(resolver),
+            [singularName]: buildQuery(singularName, resolverOpts),
           },
         },
       });
@@ -458,30 +395,27 @@ const buildCollectionType = model => {
       ..._.get(_schema, `resolver.Query.${pluralName}`, {}),
     };
     if (actionExists(resolverOpts)) {
-      const resolver = buildQuery(pluralName, resolverOpts);
       _.merge(localSchema, {
         query: {
-          [`${pluralName}${FIND_QUERY_ARGUMENTS}`]: `[${model.globalId}]`,
+          [`${pluralName}(sort: String, limit: Int, start: Int, where: JSON)`]: `[${model.globalId}]`,
         },
         resolvers: {
           Query: {
-            [pluralName]: wrapPublicationStateResolver(resolver),
+            [pluralName]: buildQuery(pluralName, resolverOpts),
           },
         },
       });
 
-      if (isQueryEnabled(_schema, `${pluralName}Connection`)) {
-        // Generate the aggregation for the given model
-        const aggregationSchema = formatModelConnectionsGQL({
-          fields: typeDefObj,
-          model,
-          name: modelName,
-          resolver: resolverOpts,
-          plugin,
-        });
+      // Generate the aggregation for the given model
+      const aggregationSchema = formatModelConnectionsGQL({
+        fields: typeDefObj,
+        model,
+        name: modelName,
+        resolver: resolverOpts,
+        plugin,
+      });
 
-        mergeSchemas(localSchema, aggregationSchema);
-      }
+      mergeSchemas(localSchema, aggregationSchema);
     }
   }
 

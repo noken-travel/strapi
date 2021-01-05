@@ -2,12 +2,11 @@
 
 const body = require('koa-body');
 const qs = require('qs');
-const { omit } = require('lodash');
 
 /**
  * Body parser hook
  */
-const addQsParser = (app, settings) => {
+const addQsParser = app => {
   Object.defineProperty(app.request, 'query', {
     configurable: false,
     enumerable: true,
@@ -17,7 +16,7 @@ const addQsParser = (app, settings) => {
     get() {
       const qstr = this.querystring;
       const cache = (this._querycache = this._querycache || {});
-      return cache[qstr] || (cache[qstr] = qs.parse(qstr, settings));
+      return cache[qstr] || (cache[qstr] = qs.parse(qstr));
     },
 
     /*
@@ -37,35 +36,18 @@ module.exports = strapi => {
      * Initialize the hook
      */
     initialize() {
-      strapi.app.use(async (ctx, next) => {
+      strapi.app.use((ctx, next) => {
         // disable for graphql
         // TODO: find a better way later
-        if (ctx.url === '/graphql') {
-          return next();
-        }
+        if (ctx.url === '/graphql') return next();
 
-        try {
-          const res = await body({
-            patchKoa: true,
-            ...omit(strapi.config.middleware.settings.parser, 'queryStringParser'),
-          })(ctx, next);
-          return res;
-        } catch (e) {
-          if (e.message.includes('maxFileSize exceeded')) {
-            throw strapi.errors.entityTooLarge('FileTooBig', {
-              errors: [
-                {
-                  id: 'Upload.status.sizeLimit',
-                  message: `file is bigger than the limit size!`,
-                },
-              ],
-            });
-          }
-          throw e;
-        }
+        return body({
+          patchKoa: true,
+          ...strapi.config.middleware.settings.parser,
+        })(ctx, next);
       });
 
-      addQsParser(strapi.app, strapi.config.get('middleware.settings.parser.queryStringParser'));
+      addQsParser(strapi.app);
     },
   };
 };

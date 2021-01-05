@@ -1,5 +1,3 @@
-'use strict';
-
 const { join } = require('path');
 const { existsSync } = require('fs-extra');
 const ora = require('ora');

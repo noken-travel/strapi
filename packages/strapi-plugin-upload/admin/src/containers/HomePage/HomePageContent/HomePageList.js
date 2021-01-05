@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { PageFooter, useQuery } from 'strapi-helper-plugin';
 import { generatePageFromStart, generateStartFromPage } from '../../../utils';
-import { useAppContext } from '../../../hooks';
+
 import List from '../../../components/List';
 import ListEmpty from '../../../components/ListEmpty';
 import Padded from '../../../components/Padded';
@@ -18,9 +18,6 @@ const HomePageList = ({
   onClick,
 }) => {
   const query = useQuery();
-  const {
-    allowedActions: { canCreate, canUpdate },
-  } = useAppContext();
 
   const limit = parseInt(query.get('_limit'), 10) || 10;
   const start = parseInt(query.get('_start'), 10) || 0;
@@ -48,7 +45,6 @@ const HomePageList = ({
           onChange={onCardCheck}
           onCardClick={onCardClick}
           selectedItems={dataToDelete}
-          showCheckbox={canUpdate}
         />
         <Padded left right size="sm">
           <Padded left right size="xs">
@@ -64,13 +60,7 @@ const HomePageList = ({
     );
   }
 
-  return (
-    <ListEmpty
-      canCreate={canCreate}
-      onClick={onClick}
-      hasSearchApplied={areResultsEmptyWithSettings}
-    />
-  );
+  return <ListEmpty onClick={onClick} hasSearchApplied={areResultsEmptyWithSettings} />;
 };
 
 HomePageList.defaultProps = {

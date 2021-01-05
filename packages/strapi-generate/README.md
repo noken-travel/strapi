@@ -16,7 +16,7 @@ $ strapi generate:something
 
 ## Resources
 
-- [License](LICENSE)
+- [MIT License](LICENSE.md)
 
 ## Links
 

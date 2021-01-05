@@ -38,7 +38,7 @@ module.exports = {
       other: '',
     };
 
-    const models = strapi.db.getModelsByPluginName(attribute.plugin);
+    const models = attribute.plugin ? strapi.plugins[attribute.plugin].models : strapi.models;
 
     const pluginModels = Object.values(strapi.plugins).reduce((acc, plugin) => {
       return acc.concat(Object.values(plugin.models));
@@ -75,24 +75,13 @@ module.exports = {
         });
       });
     } else if (_.has(attribute, 'via') && _.has(attribute, 'collection')) {
-      if (!_.has(models, attribute.collection)) {
-        throw new Error(
-          `The collection \`${_.upperFirst(
-            attribute.collection
-          )}\`, used in the attribute \`${attributeName}\` in the model ${_.upperFirst(
-            modelName
-          )}, is missing from the${
-            attribute.plugin ? ' (plugin - ' + attribute.plugin + ')' : ''
-          } models`
-        );
-      }
       const relatedAttribute = models[attribute.collection].attributes[attribute.via];
 
       if (!relatedAttribute) {
         throw new Error(
           `The attribute \`${attribute.via}\` is missing in the model ${_.upperFirst(
             attribute.collection
-          )}${attribute.plugin ? ' (plugin - ' + attribute.plugin + ')' : ''}`
+          )} ${attribute.plugin ? '(plugin - ' + attribute.plugin + ')' : ''}`
         );
       }
 
@@ -114,39 +103,14 @@ module.exports = {
         types.other = 'model';
       } else if (_.has(relatedAttribute, 'collection') || _.has(relatedAttribute, 'model')) {
         types.other = 'morphTo';
-      } else {
-        throw new Error(
-          `The attribute \`${
-            attribute.via
-          }\` is not correctly configured in the model ${_.upperFirst(attribute.collection)}${
-            attribute.plugin ? ' (plugin - ' + attribute.plugin + ')' : ''
-          }`
-        );
       }
     } else if (_.has(attribute, 'via') && _.has(attribute, 'model')) {
       types.current = 'modelD';
 
       // We have to find if they are a model linked to this attributeName
-      if (!_.has(models, attribute.model)) {
-        throw new Error(
-          `The model \`${_.upperFirst(
-            attribute.model
-          )}\`, used in the attribute \`${attributeName}\` in the model ${_.upperFirst(
-            modelName
-          )}, is missing from the${
-            attribute.plugin ? ' (plugin - ' + attribute.plugin + ')' : ''
-          } models`
-        );
-      }
-      const reverseAttribute = models[attribute.model].attributes[attribute.via];
+      const model = models[attribute.model];
 
-      if (!reverseAttribute) {
-        throw new Error(
-          `The attribute \`${attribute.via}\` is missing in the model ${_.upperFirst(
-            attribute.model
-          )}${attribute.plugin ? ' (plugin - ' + attribute.plugin + ')' : ''}`
-        );
-      }
+      const reverseAttribute = model.attributes[attribute.via];
 
       if (
         _.has(reverseAttribute, 'via') &&
@@ -159,14 +123,6 @@ module.exports = {
         types.other = 'model';
       } else if (_.has(reverseAttribute, 'collection') || _.has(reverseAttribute, 'model')) {
         types.other = 'morphTo';
-      } else {
-        throw new Error(
-          `The attribute \`${
-            attribute.via
-          }\` is not correctly configured in the model ${_.upperFirst(attribute.model)}${
-            attribute.plugin ? ' (plugin - ' + attribute.plugin + ')' : ''
-          }`
-        );
       }
     } else if (_.has(attribute, 'model')) {
       types.current = 'model';
@@ -210,12 +166,6 @@ module.exports = {
           }
         });
       });
-    } else {
-      throw new Error(
-        `The attribute \`${attributeName}\` is not correctly configured in the model ${_.upperFirst(
-          modelName
-        )}${attribute.plugin ? ' (plugin - ' + attribute.plugin + ')' : ''}`
-      );
     }
 
     if (types.current === 'collection' && types.other === 'morphTo') {
@@ -364,12 +314,7 @@ module.exports = {
 
       // Get relation nature
       let details;
-
       const targetName = association.model || association.collection || '';
-
-      const targetModel =
-        targetName !== '*' ? strapi.db.getModel(targetName, association.plugin) : null;
-
       const infos = this.getNature({
         attribute: association,
         attributeName: key,
@@ -377,8 +322,15 @@ module.exports = {
       });
 
       if (targetName !== '*') {
-        const model = strapi.db.getModel(targetName, association.plugin);
-        details = _.get(model, ['attributes', association.via], {});
+        if (association.plugin) {
+          details = _.get(
+            strapi.plugins,
+            [association.plugin, 'models', targetName, 'attributes', association.via],
+            {}
+          );
+        } else {
+          details = _.get(strapi.models, [targetName, 'attributes', association.via], {});
+        }
       }
 
       // Build associations object
@@ -386,7 +338,6 @@ module.exports = {
         const ast = {
           alias: key,
           type: 'collection',
-          targetUid: targetModel.uid,
           collection: association.collection,
           via: association.via || undefined,
           nature: infos.nature,
@@ -413,7 +364,6 @@ module.exports = {
         definition.associations.push({
           alias: key,
           type: 'model',
-          targetUid: targetModel.uid,
           model: association.model,
           via: association.via || undefined,
           nature: infos.nature,
@@ -431,7 +381,7 @@ module.exports = {
             const attr = strapi.plugins[current].models[entity].attributes[attribute];
 
             if ((attr.collection || attr.model || '').toLowerCase() === model.toLowerCase()) {
-              acc.push(strapi.plugins[current].models[entity]);
+              acc.push(strapi.plugins[current].models[entity].globalId);
             }
           });
         });
@@ -444,7 +394,7 @@ module.exports = {
           const attr = strapi.models[entity].attributes[attribute];
 
           if ((attr.collection || attr.model || '').toLowerCase() === model.toLowerCase()) {
-            acc.push(strapi.models[entity]);
+            acc.push(strapi.models[entity].globalId);
           }
         });
 
@@ -456,18 +406,17 @@ module.exports = {
           const attr = strapi.components[entity].attributes[attribute];
 
           if ((attr.collection || attr.model || '').toLowerCase() === model.toLowerCase()) {
-            acc.push(strapi.components[entity]);
+            acc.push(strapi.components[entity].globalId);
           }
         });
 
         return acc;
       }, []);
 
-      const models = _.uniqWith(appModels.concat(pluginsModels, componentModels), _.isEqual);
+      const models = _.uniq(appModels.concat(pluginsModels).concat(componentModels));
 
       definition.associations.push({
         alias: key,
-        targetUid: '*',
         type: association.model ? 'model' : 'collection',
         related: models,
         nature: infos.nature,

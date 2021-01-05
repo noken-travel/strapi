@@ -7,21 +7,22 @@
 // Public node modules.
 const fs = require('fs');
 const path = require('path');
-const { errors } = require('strapi-plugin-upload');
 
 module.exports = {
   init({ sizeLimit = 1000000 } = {}) {
     const verifySize = file => {
       if (file.size > sizeLimit) {
-        throw errors.entityTooLarge();
+        throw strapi.errors.badRequest('FileToBig', {
+          errors: [
+            {
+              id: 'Upload.status.sizeLimit',
+              message: `${file.name} file is bigger than limit size!`,
+              values: { file: file.name },
+            },
+          ],
+        });
       }
     };
-    const configPublicPath = strapi.config.get(
-      'middleware.settings.public.path',
-      strapi.config.paths.static
-    );
-
-    const uploadDir = path.resolve(strapi.dir, configPublicPath);
 
     return {
       upload(file) {
@@ -30,7 +31,7 @@ module.exports = {
         return new Promise((resolve, reject) => {
           // write file in public/assets folder
           fs.writeFile(
-            path.join(uploadDir, `/uploads/${file.hash}${file.ext}`),
+            path.join(strapi.config.paths.static, `/uploads/${file.hash}${file.ext}`),
             file.buffer,
             err => {
               if (err) {
@@ -46,7 +47,10 @@ module.exports = {
       },
       delete(file) {
         return new Promise((resolve, reject) => {
-          const filePath = path.join(uploadDir, `/uploads/${file.hash}${file.ext}`);
+          const filePath = path.join(
+            strapi.config.paths.static,
+            `/uploads/${file.hash}${file.ext}`
+          );
 
           if (!fs.existsSync(filePath)) {
             return resolve("File doesn't exist");

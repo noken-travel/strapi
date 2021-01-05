@@ -30,10 +30,9 @@ import { BrowserRouter } from 'react-router-dom';
 // Strapi provider with the internal APIs
 import { StrapiProvider } from 'strapi-helper-plugin';
 import { merge } from 'lodash';
-import Fonts from './components/Fonts';
+import { Fonts } from '@buffetjs/styles';
 import { freezeApp, pluginLoaded, unfreezeApp, updatePlugin } from './containers/App/actions';
 import { showNotification } from './containers/NotificationProvider/actions';
-import { showNotification as showNewNotification } from './containers/NewNotification/actions';
 
 import basename from './utils/basename';
 import getInjectors from './utils/reducerInjectors';
@@ -122,14 +121,7 @@ const remoteURL = (() => {
 })();
 
 const displayNotification = (message, status) => {
-  console.warn(
-    // Validate the text
-    'Deprecated: Will be deleted.\nPlease use strapi.notification.toggle(config).\nDocs : https://strapi.io/documentation/developer-docs/latest/plugin-development/frontend-development.html#strapi-notification'
-  );
   dispatch(showNotification(message, status));
-};
-const displayNewNotification = config => {
-  dispatch(showNewNotification(config));
 };
 const lockApp = data => {
   dispatch(freezeApp(data));
@@ -138,25 +130,12 @@ const unlockApp = () => {
   dispatch(unfreezeApp());
 };
 
-const lockAppWithOverlay = () => {
-  const overlayblockerParams = {
-    children: <div />,
-    noGradient: true,
-  };
-
-  lockApp(overlayblockerParams);
-};
-
 window.strapi = Object.assign(window.strapi || {}, {
   node: MODE || 'host',
   env: NODE_ENV,
   remoteURL,
   backendURL: BACKEND_URL === '/' ? window.location.origin : BACKEND_URL,
   notification: {
-    // New notification api
-    toggle: config => {
-      displayNewNotification(config);
-    },
     success: message => {
       displayNotification(message, 'success');
     },
@@ -186,7 +165,6 @@ window.strapi = Object.assign(window.strapi || {}, {
     window.navigator.userLanguage ||
     'en',
   lockApp,
-  lockAppWithOverlay,
   unlockApp,
   injectReducer,
   injectSaga,

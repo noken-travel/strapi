@@ -8,19 +8,14 @@ import HeaderSearch from './HeaderSearch';
 
 const Search = () => {
   const [value, setValue] = useState('');
-  const {
-    allowedActions: { canRead },
-    setParam,
-  } = useModalContext();
+  const { setParam } = useModalContext();
   const { formatMessage } = useGlobalContext();
   const debouncedSearch = useDebounce(value, 300);
 
   useEffect(() => {
-    if (canRead) {
-      setParam({ name: '_q', value: debouncedSearch });
-    }
+    setParam({ name: '_q', value: debouncedSearch });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, canRead]);
+  }, [debouncedSearch]);
 
   const handleSearchChange = e => {
     setValue(e.target.value);
@@ -29,10 +24,6 @@ const Search = () => {
   const handleClear = () => {
     setValue('');
   };
-
-  if (!canRead) {
-    return null;
-  }
 
   return (
     <HeaderSearch

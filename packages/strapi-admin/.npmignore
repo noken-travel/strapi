@@ -101,4 +101,3 @@ node_modules
 test
 testApp
 coverage
-webpack.config.dev.js

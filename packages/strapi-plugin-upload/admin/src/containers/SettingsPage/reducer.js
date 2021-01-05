@@ -5,13 +5,11 @@ const initialState = fromJS({
   initialData: {
     responsiveDimensions: true,
     sizeOptimization: true,
-    autoOrientation: false,
     videoPreview: false,
   },
   modifiedData: {
     responsiveDimensions: true,
     sizeOptimization: true,
-    autoOrientation: false,
     videoPreview: false,
   },
 });

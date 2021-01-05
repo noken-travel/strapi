@@ -1,39 +1,35 @@
-'use strict';
-
 const { createRequest } = require('./request');
 
 const auth = {
+  username: 'admin',
   email: 'admin@strapi.io',
-  firstname: 'admin',
-  lastname: 'admin',
-  password: 'Password123',
+  password: 'pcw123',
 };
 
 const rq = createRequest();
 
 const register = async () => {
   await rq({
-    url: '/admin/register-admin',
+    url: '/admin/auth/local/register',
     method: 'POST',
     body: auth,
   }).catch(err => {
-    console.error(err);
-    if (err.message === 'You cannot register a new super admin') return;
+    if (err.error.message.includes("You can't register a new admin")) return;
     throw err;
   });
 };
 
 const login = async () => {
   const { body } = await rq({
-    url: '/admin/login',
+    url: '/admin/auth/local',
     method: 'POST',
     body: {
-      email: auth.email,
+      identifier: auth.email,
       password: auth.password,
     },
   });
 
-  return body.data;
+  return body;
 };
 
 module.exports = {
@@ -42,18 +38,7 @@ module.exports = {
     await register();
 
     // login
-    const res = await login();
-
-    return res && res.token;
-  },
-  async login() {
-    const res = await login();
-
-    return res && res.token;
-  },
-  async getUser() {
-    const res = await login();
-
-    return res.user;
+    const { jwt } = await login();
+    return jwt;
   },
 };

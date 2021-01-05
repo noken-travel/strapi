@@ -8,20 +8,16 @@ const FormWrapper = styled.div`
   padding-right: 20px;
   padding-bottom: 10px;
   border-top: 1px solid
-    ${({ hasErrors, isOpen, isReadOnly }) => {
+    ${({ hasErrors, isOpen }) => {
       if (hasErrors) {
         return '#ffa784';
       }
-      if (isOpen && !isReadOnly) {
+      if (isOpen) {
         return '#AED4FB';
       }
 
       return 'rgba(227, 233, 243, 0.75)';
     }};
 `;
-
-FormWrapper.defaultProps = {
-  isReadOnly: false,
-};
 
 export default FormWrapper;

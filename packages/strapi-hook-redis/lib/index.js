@@ -105,7 +105,10 @@ module.exports = function(strapi) {
           if (!cache) {
             cache = await cb();
 
-            if (cache && _.get(connection, 'options.disabledCaching') !== true) {
+            if (
+              cache &&
+              _.get(connection, 'options.disabledCaching') !== true
+            ) {
               switch (type) {
                 case 'json':
                   redis.set(serial, JSON.stringify(cache), 'ex', expired);
@@ -144,9 +147,6 @@ module.exports = function(strapi) {
 
         if (_.get(connection, 'options.debug') === true) {
           redis.monitor((err, monitor) => {
-            if (err) {
-              console.error(err);
-            }
             // Entering monitoring mode.
             monitor.on('monitor', (time, args) => {
               console.log(time + ': ' + util.inspect(args));

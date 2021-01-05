@@ -4,7 +4,6 @@ const Wrapper = styled.div`
   position: relative;
   margin-bottom: 3px;
   line-height: 18px;
-  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'initial')};
 
   .CodeMirror {
     font-size: 13px !important;

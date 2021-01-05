@@ -1,27 +1,11 @@
 import styled from 'styled-components';
 
-const hoverStyle = `
-  border: 1px solid #aed4fb;
-  background-color: #e6f0fb;
-  > button {
-    :before,
-    :after {
-      background-color: #007eff;
-    }
-    background-color: #aed4fb;
-  }
-
-  > p {
-    color: #007eff;
-  }
-`;
-
 /* eslint-disable indent */
 const NonRepeatableWrapper = styled.div`
   margin: 0 !important;
   padding: 0 20px !important;
 
-  ${({ isEmpty, isFromDynamicZone, isReadOnly }) => {
+  ${({ isEmpty, isFromDynamicZone }) => {
     if (isEmpty) {
       return `
       position: relative;
@@ -29,7 +13,7 @@ const NonRepeatableWrapper = styled.div`
       margin-bottom: 25px !important;
       background-color: #fafafb;
       text-align: center;
-      cursor: ${isReadOnly ? 'not-allowed' : 'pointer'};
+      cursor: pointer;
       border-radius: 2px;
 
       > button {
@@ -41,12 +25,24 @@ const NonRepeatableWrapper = styled.div`
         line-height: 38px;
         border-radius: 50%;
         background-color: #f3f4f4;
-        cursor: ${isReadOnly ? 'not-allowed !important' : 'pointer'};
+        cursor: pointer;
       }
       border: 1px solid transparent;
 
       &:hover {
-        ${isReadOnly ? '' : hoverStyle};
+        border: 1px solid #aed4fb;
+        background-color: #e6f0fb;
+        > button {
+          :before,
+          :after {
+            background-color: #007eff;
+          }
+          background-color: #aed4fb;
+        }
+
+        > p {
+          color: #007eff;
+        }
       }
     `;
     }
@@ -65,9 +61,5 @@ const NonRepeatableWrapper = styled.div`
   `;
   }}
 `;
-
-NonRepeatableWrapper.defaultProps = {
-  isReadOnly: false,
-};
 
 export default NonRepeatableWrapper;

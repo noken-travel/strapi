@@ -22,10 +22,6 @@ module.exports = (mongoose = Mongoose) => {
   };
 
   const convertType = (name, attr) => {
-    if (_.has(attr, 'columnType')) {
-      return { type: attr.columnType };
-    }
-
     switch (attr.type.toLowerCase()) {
       case 'array':
         return { type: Array };
@@ -36,18 +32,14 @@ module.exports = (mongoose = Mongoose) => {
       case 'time':
         return {
           type: String,
-          validate: value =>
-            (!attr.required && _.isNil(value)) || parseType({ type: 'time', value }),
-          set: value =>
-            !attr.required && _.isNil(value) ? value : parseType({ type: 'time', value }),
+          validate: value => parseType({ type: 'time', value }),
+          set: value => parseType({ type: 'time', value }),
         };
       case 'date':
         return {
           type: String,
-          validate: value =>
-            (!attr.required && _.isNil(value)) || parseType({ type: 'date', value }),
-          set: value =>
-            !attr.required && _.isNil(value) ? value : parseType({ type: 'date', value }),
+          validate: value => parseType({ type: 'date', value }),
+          set: value => parseType({ type: 'date', value }),
         };
       case 'datetime':
         return {

@@ -6,16 +6,7 @@ import SearchInfo from '../SearchInfo';
 import Clear from './Clear';
 import Wrapper from './Wrapper';
 
-const HeaderSearch = ({
-  label,
-  name,
-  onChange,
-  onClear,
-  placeholder,
-  value,
-  className,
-  autoFocus,
-}) => {
+const HeaderSearch = ({ label, name, onChange, onClear, placeholder, value, className }) => {
   return (
     <Wrapper className={className}>
       <div>
@@ -29,7 +20,6 @@ const HeaderSearch = ({
           placeholder={placeholder}
           type="text"
           value={value}
-          autoFocus={autoFocus}
         />
         {value !== '' && (
           <Clear onClick={onClear}>
@@ -49,7 +39,6 @@ HeaderSearch.defaultProps = {
   onClear: () => {},
   placeholder: 'Search for an entry',
   value: '',
-  autoFocus: false,
 };
 
 HeaderSearch.propTypes = {
@@ -59,7 +48,6 @@ HeaderSearch.propTypes = {
   onClear: PropTypes.func,
   placeholder: PropTypes.string,
   value: PropTypes.string,
-  autoFocus: PropTypes.bool,
 };
 
 export default HeaderSearch;

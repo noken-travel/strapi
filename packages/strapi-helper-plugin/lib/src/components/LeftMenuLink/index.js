@@ -4,18 +4,17 @@ import { NavLink } from 'react-router-dom';
 
 import Icon from './Icon';
 
-function LeftMenuLink({ children, to, CustomComponent }) {
+function LeftMenuLink({ children, to }) {
   return (
     <NavLink to={to}>
       <Icon />
-      {CustomComponent ? <CustomComponent /> : <p>{children}</p>}
+      <p>{children}</p>
     </NavLink>
   );
 }
 
 LeftMenuLink.defaultProps = {
   children: null,
-  CustomComponent: null,
 };
 
 LeftMenuLink.propTypes = {

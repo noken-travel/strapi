@@ -9,13 +9,7 @@ import pluginId from '../../pluginId';
 import stepper from './stepper';
 import useModalContext from '../../hooks/useModalContext';
 
-const InputModalStepper = ({
-  allowedActions,
-  isOpen,
-  onToggle,
-  noNavigation,
-  onInputMediaChange,
-}) => {
+const InputModalStepper = ({ isOpen, onToggle, noNavigation, onInputMediaChange }) => {
   const { emitEvent, formatMessage } = useGlobalContext();
   const [shouldDeleteFile, setShouldDeleteFile] = useState(false);
   const [displayNextButton, setDisplayNextButton] = useState(false);
@@ -51,7 +45,6 @@ const InputModalStepper = ({
     isWarningDeleteOpen,
     multiple,
     selectedFiles,
-    submitEditNewFile,
     submitEditExistingFile,
     toggleModalWarning,
   } = useModalContext();
@@ -176,7 +169,6 @@ const InputModalStepper = ({
 
   const handleSubmitEditNewFile = e => {
     e.preventDefault();
-    submitEditNewFile();
     goNext();
   };
 
@@ -201,23 +193,7 @@ const InputModalStepper = ({
         handleFileSelection({ target: { name: id } });
         goToList();
       } catch (err) {
-        console.error(err);
-
-        const status = get(err, 'response.status', get(err, 'status', null));
-        const statusText = get(err, 'response.statusText', get(err, 'statusText', null));
-        const errorMessage = get(
-          err,
-          ['response', 'payload', 'message', '0', 'messages', '0', 'message'],
-          get(err, ['response', 'payload', 'message'], statusText)
-        );
-        strapi.notification.toggle({
-          type: 'warning',
-          message: errorMessage,
-        });
-
-        if (status) {
-          handleSetFileToEditError(errorMessage);
-        }
+        console.log(err);
       }
     }
   };
@@ -272,16 +248,11 @@ const InputModalStepper = ({
     } catch (err) {
       const status = get(err, 'response.status', get(err, 'status', null));
       const statusText = get(err, 'response.statusText', get(err, 'statusText', null));
-      let errorMessage = get(
+      const errorMessage = get(
         err,
         ['response', 'payload', 'message', '0', 'messages', '0', 'message'],
         get(err, ['response', 'payload', 'message'], statusText)
       );
-
-      // TODO fix errors globally when the back-end sends readable one
-      if (status === 413) {
-        errorMessage = formatMessage({ id: 'app.utils.errors.file-too-big.message' });
-      }
 
       if (status) {
         handleSetFileToEditError(errorMessage);
@@ -337,7 +308,6 @@ const InputModalStepper = ({
         {/* body of the modal */}
         {Component && (
           <Component
-            {...allowedActions}
             addFilesToUpload={addFilesToUploadList}
             components={components}
             filesToDownload={filesToDownload}
@@ -448,29 +418,11 @@ const InputModalStepper = ({
 };
 
 InputModalStepper.defaultProps = {
-  allowedActions: {
-    canCopyLink: true,
-    canCreate: true,
-    canDownload: true,
-    canMain: true,
-    canRead: true,
-    canSettings: true,
-    canUpdate: true,
-  },
   noNavigation: false,
   onToggle: () => {},
 };
 
 InputModalStepper.propTypes = {
-  allowedActions: PropTypes.shape({
-    canCopyLink: PropTypes.bool,
-    canCreate: PropTypes.bool,
-    canDownload: PropTypes.bool,
-    canMain: PropTypes.bool,
-    canRead: PropTypes.bool,
-    canSettings: PropTypes.bool,
-    canUpdate: PropTypes.bool,
-  }),
   isOpen: PropTypes.bool.isRequired,
   noNavigation: PropTypes.bool,
   onInputMediaChange: PropTypes.func.isRequired,

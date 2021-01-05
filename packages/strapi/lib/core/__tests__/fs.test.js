@@ -1,8 +1,6 @@
-'use strict';
-
-const path = require('path');
-const fse = require('fs-extra');
 const fs = require('../fs');
+const fse = require('fs-extra');
+const path = require('path');
 
 jest.mock('fs-extra');
 

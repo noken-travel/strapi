@@ -18,12 +18,12 @@ import { isEmpty, isNaN, replace, words } from 'lodash';
 import cn from 'classnames';
 import WysiwygProvider from '../../containers/WysiwygProvider';
 import Controls from '../WysiwygInlineControls';
-import PreviewWysiwyg from '../PreviewWysiwyg';
 import WysiwygBottomControls from '../WysiwygBottomControls';
 import WysiwygEditor from '../WysiwygEditor';
 import MediaLib from './MediaLib';
 import CustomSelect from './customSelect';
 import PreviewControl from './previewControl';
+import PreviewWysiwyg from './previewWysiwyg';
 import ToggleMode from './toggleMode';
 import { CONTROLS } from './constants';
 import {
@@ -125,17 +125,7 @@ class Wysiwyg extends React.Component {
     }
 
     // Update the content when used in a dynamiczone
-    // We cannot update the value of the component each time there is a onChange event
-    // fired otherwise the component gets very slow
     if (prevProps.value !== this.props.value && !this.state.isFocused) {
-      this.setInitialValue(this.props);
-    }
-
-    // Here we need to update the content of editorState for the edition case
-    // With the current architecture of the EditView we cannot rely on the componentDidMount lifecycle
-    // Since we need to perform some operations in the reducer the loading phase stops before all the operations
-    // are computed which in some case causes the inputs component to be initialised with a null value.
-    if (!prevProps.value && this.props.value) {
       this.setInitialValue(this.props);
     }
   }
@@ -337,8 +327,6 @@ class Wysiwyg extends React.Component {
     const newContentState = this.createNewContentStateFromBlock(newBlock);
     const newEditorState = this.createNewEditorState(newContentState, text);
 
-    this.sendData(newEditorState);
-
     return this.setState(
       {
         editorState: newEditorState,
@@ -413,9 +401,6 @@ class Wysiwyg extends React.Component {
           });
 
     newEditorState = EditorState.acceptSelection(newEditorState, updatedSelection);
-
-    // Update the parent reducer
-    this.sendData(newEditorState);
 
     return this.setState({
       editorState: EditorState.forceSelection(newEditorState, newEditorState.getSelection()),
@@ -597,12 +582,8 @@ class Wysiwyg extends React.Component {
     Modifier.replaceText(contentState, this.getSelection(), text);
 
   onChange = editorState => {
-    const { disabled } = this.props;
-
-    if (!disabled) {
-      this.sendData(editorState);
-      this.setState({ editorState });
-    }
+    this.sendData(editorState);
+    this.setState({ editorState });
   };
 
   handleTab = e => {
@@ -653,7 +634,6 @@ class Wysiwyg extends React.Component {
   render() {
     const { editorState, isMediaLibraryOpened, isPreviewMode, isFullscreen } = this.state;
     const editorStyle = isFullscreen ? { marginTop: '0' } : this.props.style;
-    const { disabled } = this.props;
 
     return (
       <WysiwygProvider
@@ -664,7 +644,7 @@ class Wysiwyg extends React.Component {
         isFullscreen={this.state.isFullscreen}
         placeholder={this.props.placeholder}
       >
-        <EditorWrapper isFullscreen={isFullscreen} disabled={disabled}>
+        <EditorWrapper isFullscreen={isFullscreen}>
           {/* FIRST EDITOR WITH CONTROLS} */}
           <div
             className={cn(
@@ -681,12 +661,12 @@ class Wysiwyg extends React.Component {
             style={editorStyle}
           >
             <div className="controlsContainer">
-              <CustomSelect disabled={isPreviewMode || disabled} />
+              <CustomSelect />
               {CONTROLS.map((value, key) => (
                 <Controls
                   key={key}
                   buttons={value}
-                  disabled={isPreviewMode || disabled}
+                  disabled={isPreviewMode}
                   editorState={editorState}
                   handlers={{
                     addContent: this.addContent,
@@ -726,7 +706,6 @@ class Wysiwyg extends React.Component {
                   setRef={editor => (this.domEditor = editor)}
                   stripPastedStyles
                   tabIndex={this.props.tabIndex}
-                  spellCheck
                 />
                 <input className="editorInput" tabIndex="-1" />
               </div>
@@ -771,7 +750,6 @@ Wysiwyg.defaultProps = {
   autoFocus: false,
   className: '',
   deactivateErrorHighlight: false,
-  disabled: false,
   error: false,
   onBlur: () => {},
   onChange: () => {},
@@ -786,7 +764,6 @@ Wysiwyg.propTypes = {
   autoFocus: PropTypes.bool,
   className: PropTypes.string,
   deactivateErrorHighlight: PropTypes.bool,
-  disabled: PropTypes.bool,
   error: PropTypes.bool,
   name: PropTypes.string.isRequired,
   onBlur: PropTypes.func,

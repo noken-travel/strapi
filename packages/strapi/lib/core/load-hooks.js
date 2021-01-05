@@ -1,8 +1,8 @@
 'use strict';
 
 // Dependencies.
-const path = require('path');
 const fs = require('fs-extra');
+const path = require('path');
 const _ = require('lodash');
 const glob = require('../load/glob');
 const findPackagePath = require('../load/package-path');
@@ -37,11 +37,15 @@ const loadHooksInDir = async (dir, hooks) => {
   });
 };
 
-const loadLocalHooks = (appPath, hooks) => loadHooksInDir(path.resolve(appPath, 'hooks'), hooks);
+const loadLocalHooks = (appPath, hooks) =>
+  loadHooksInDir(path.resolve(appPath, 'hooks'), hooks);
 
 const loadPluginsHooks = async (plugins, hooks) => {
   for (let pluginName of plugins) {
-    const dir = path.resolve(findPackagePath(`strapi-plugin-${pluginName}`), 'hooks');
+    const dir = path.resolve(
+      findPackagePath(`strapi-plugin-${pluginName}`),
+      'hooks'
+    );
     await loadHooksInDir(dir, hooks);
   }
 };
@@ -81,7 +85,11 @@ const mountHooks = (name, files, hooks) => {
 
     let dependencies = [];
     try {
-      dependencies = _.get(require(`strapi-hook-${name}/package.json`), 'strapi.dependencies', []);
+      dependencies = _.get(
+        require(`strapi-hook-${name}/package.json`),
+        'strapi.dependencies',
+        []
+      );
     } catch (err) {
       // Silent
     }

@@ -25,6 +25,8 @@ export default strapi => {
     isRequired: pluginPkg.strapi.required || false,
     layout: null,
     lifecycles: () => {},
+    leftMenuLinks: [],
+    leftMenuSections: [],
     mainComponent: null,
     name: pluginPkg.strapi.name,
     pluginLogo,

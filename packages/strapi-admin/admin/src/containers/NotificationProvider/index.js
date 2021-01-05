@@ -9,7 +9,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { createStructuredSelector } from 'reselect';
-import { NotificationsContainer } from '../../components/Notifications';
+import NotificationsContainer from '../../components/NotificationsContainer';
 import { selectNotifications } from './selectors';
 import { hideNotification } from './actions';
 
@@ -42,4 +42,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(NotificationProvider);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(NotificationProvider);

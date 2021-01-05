@@ -41,13 +41,20 @@ class WysiwygWithErrors extends React.Component {
     } = this.props;
 
     return (
-      <Error inputError={inputError} name={name} type="text" validations={validations}>
+      <Error
+        inputError={inputError}
+        name={name}
+        type="text"
+        validations={validations}
+      >
         {({ canCheck, onBlur, error, dispatch }) => {
-          const hasError = Boolean(error);
+          const hasError = error && error !== null;
 
           return (
             <Wrapper
-              className={`${cn(!isEmpty(className) && className)} ${hasError ? 'bordered' : ''}`}
+              className={`${cn(!isEmpty(className) && className)} ${
+                hasError ? 'bordered' : ''
+              }`}
               style={style}
             >
               <Label htmlFor={name}>{label}</Label>
@@ -79,7 +86,9 @@ class WysiwygWithErrors extends React.Component {
                 tabIndex={tabIndex}
                 value={value}
               />
-              {!hasError && inputDescription && <Description>{inputDescription}</Description>}
+              {!hasError && inputDescription && (
+                <Description>{inputDescription}</Description>
+              )}
               {hasError && <ErrorMessage>{error}</ErrorMessage>}
             </Wrapper>
           );

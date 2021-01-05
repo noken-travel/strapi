@@ -68,40 +68,15 @@ module.exports = function(strapi) {
           ORM,
         };
 
-        return mountConnection(connectionName, ctx);
+        return Promise.all([
+          mountComponents(connectionName, ctx),
+          mountApis(connectionName, ctx),
+          mountAdmin(connectionName, ctx),
+          mountPlugins(connectionName, ctx),
+        ]);
       });
 
     return Promise.all(connectionsPromises);
-  }
-
-  async function mountConnection(connectionName, ctx) {
-    if (strapi.models['core_store'].connection === connectionName) {
-      await mountCoreStore(ctx);
-    }
-
-    const finalizeMountings = await Promise.all([
-      mountComponents(connectionName, ctx),
-      mountApis(connectionName, ctx),
-      mountAdmin(connectionName, ctx),
-      mountPlugins(connectionName, ctx),
-    ]);
-
-    for (const finalizeMounting of _.flattenDeep(finalizeMountings)) {
-      await finalizeMounting();
-    }
-  }
-
-  function mountCoreStore(ctx) {
-    return mountModels(
-      {
-        models: {
-          core_store: strapi.models['core_store'],
-        },
-        target: strapi.models,
-      },
-      ctx,
-      { selfFinalize: true }
-    );
   }
 
   function mountComponents(connectionName, ctx) {
@@ -115,10 +90,7 @@ module.exports = function(strapi) {
 
   function mountApis(connectionName, ctx) {
     const options = {
-      models: _.pickBy(
-        strapi.models,
-        ({ connection }, name) => connection === connectionName && name !== 'core_store'
-      ),
+      models: _.pickBy(strapi.models, ({ connection }) => connection === connectionName),
       target: strapi.models,
     };
 

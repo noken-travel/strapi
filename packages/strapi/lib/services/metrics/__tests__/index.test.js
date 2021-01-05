@@ -1,9 +1,7 @@
-'use strict';
-
 jest.mock('node-fetch');
 
-const fetch = require('node-fetch');
 const metrics = require('../index');
+const fetch = require('node-fetch');
 
 describe('metrics', () => {
   test('Initializes a middleware', () => {
@@ -61,15 +59,6 @@ describe('metrics', () => {
     send('someEvent');
 
     expect(fetch).toHaveBeenCalled();
-    expect(fetch.mock.calls[0][0]).toBe('https://analytics.strapi.io/track');
-    expect(fetch.mock.calls[0][1].method).toBe('POST');
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({
-      event: 'someEvent',
-      uuid: 'test',
-      properties: {
-        projectType: 'Community',
-      },
-    });
     fetch.mockClear();
   });
 

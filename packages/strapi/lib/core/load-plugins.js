@@ -8,7 +8,7 @@ const loadFiles = require('../load/load-files');
 const loadConfig = require('../load/load-config-files');
 
 module.exports = async ({ dir, config }) => {
-  const localPlugins = await loadLocalPlugins({ dir, config });
+  const localPlugins = await loadLocalPlugins({ dir });
   const plugins = await loadPlugins({
     installedPlugins: config.installedPlugins,
     config,
@@ -28,7 +28,7 @@ module.exports = async ({ dir, config }) => {
   return _.merge(plugins, localPlugins);
 };
 
-const loadLocalPlugins = async ({ dir, config }) => {
+const loadLocalPlugins = async ({ dir }) => {
   const pluginsDir = join(dir, 'plugins');
 
   if (!existsSync(pluginsDir)) return {};
@@ -37,11 +37,8 @@ const loadLocalPlugins = async ({ dir, config }) => {
     loadFiles(pluginsDir, '{*/!(config)/*.*(js|json),*/package.json}'),
     loadConfig(pluginsDir, '*/config/**/*.+(js|json)'),
   ]);
-  const userConfigs = Object.keys(files).reduce((acc, plugin) => {
-    acc[plugin] = { config: config.get(['plugins', plugin], {}) };
-    return acc;
-  }, {});
-  return _.merge(files, configs, userConfigs);
+
+  return _.merge(files, configs);
 };
 
 const loadPlugins = async ({ installedPlugins, config }) => {

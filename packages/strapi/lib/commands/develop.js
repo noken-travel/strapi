@@ -14,7 +14,7 @@ const strapi = require('../index');
  * `$ strapi develop`
  *
  */
-module.exports = async function({ build, watchAdmin, browser }) {
+module.exports = async function({ build, watchAdmin }) {
   const dir = process.cwd();
   const config = loadConfiguration(dir);
 
@@ -37,7 +37,7 @@ module.exports = async function({ build, watchAdmin, browser }) {
     if (cluster.isMaster) {
       if (watchAdmin) {
         try {
-          execa('npm', ['run', '-s', 'strapi', 'watch-admin', '--', '--browser', browser], {
+          execa('npm', ['run', '-s', 'strapi', 'watch-admin'], {
             stdio: 'inherit',
           });
         } catch (err) {

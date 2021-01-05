@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDebounce } from '@buffetjs/hooks';
-import { HeaderSearch, useGlobalContext, useQuery, LoadingIndicator } from 'strapi-helper-plugin';
-import { useAppContext } from '../../../hooks';
+import { HeaderSearch, useGlobalContext, useQuery } from 'strapi-helper-plugin';
 import { getTrad, getFileModelTimestamps } from '../../../utils';
 
 import ControlsWrapper from '../../../components/ControlsWrapper';
@@ -15,14 +14,10 @@ const HomePageSettings = ({
   areAllCheckboxesSelected,
   filters,
   hasSomeCheckboxSelected,
-  isLoading,
   onChange,
   onFilterDelete,
   onSelectAll,
 }) => {
-  const {
-    allowedActions: { canUpdate },
-  } = useAppContext();
   const { formatMessage, plugins } = useGlobalContext();
   const [, updated_at] = getFileModelTimestamps(plugins);
   const query = useQuery();
@@ -53,30 +48,18 @@ const HomePageSettings = ({
         placeholder={formatMessage({ id: getTrad('search.placeholder') })}
         name="_q"
         value={searchValue}
-        autoFocus
       />
-      {isLoading ? (
-        <>
-          <Padded top bottom size="lg" />
-          <LoadingIndicator />
-        </>
-      ) : (
-        <ControlsWrapper>
-          {canUpdate && (
-            <>
-              <SelectAll
-                onChange={onSelectAll}
-                checked={areAllCheckboxesSelected}
-                someChecked={hasSomeCheckboxSelected && !areAllCheckboxesSelected}
-              />
-              <Padded right />
-            </>
-          )}
-          <SortPicker onChange={onChange} value={query.get('_sort') || `${updated_at}:DESC`} />
-          <Padded right />
-          <Filters onChange={onChange} filters={filters} onClick={onFilterDelete} />
-        </ControlsWrapper>
-      )}
+      <ControlsWrapper>
+        <SelectAll
+          onChange={onSelectAll}
+          checked={areAllCheckboxesSelected}
+          someChecked={hasSomeCheckboxSelected && !areAllCheckboxesSelected}
+        />
+        <Padded right />
+        <SortPicker onChange={onChange} value={query.get('_sort') || `${updated_at}:DESC`} />
+        <Padded right />
+        <Filters onChange={onChange} filters={filters} onClick={onFilterDelete} />
+      </ControlsWrapper>
     </>
   );
 };
@@ -94,7 +77,6 @@ HomePageSettings.propTypes = {
   areAllCheckboxesSelected: PropTypes.bool,
   filters: PropTypes.array,
   hasSomeCheckboxSelected: PropTypes.bool,
-  isLoading: PropTypes.bool.isRequired,
   onChange: PropTypes.func,
   onFilterDelete: PropTypes.func,
   onSelectAll: PropTypes.func,

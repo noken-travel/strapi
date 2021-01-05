@@ -1,9 +1,8 @@
 'use strict';
 
 const _ = require('lodash');
-const pq = require('./utils/populate-queries');
 const { getComponentAttributes, isComponent } = require('./utils/attributes');
-const { isPolymorphic } = require('./utils/associations');
+const { findModelByAssoc, isPolymorphic } = require('./utils/associations');
 
 /**
  * Create utilities to populate a model on fetch
@@ -16,18 +15,18 @@ const populateFetch = (definition, options) => {
 
   if (_.isNil(options.withRelated)) {
     options.withRelated = []
-      .concat(populateComponents(definition, options))
-      .concat(populateAssociations(definition, options));
+      .concat(populateComponents(definition))
+      .concat(populateAssociations(definition));
   } else if (_.isEmpty(options.withRelated)) {
-    options.withRelated = populateComponents(definition, options);
+    options.withRelated = populateComponents(definition);
   } else {
-    options.withRelated = []
-      .concat(formatPopulateOptions(definition, options))
-      .concat(populateComponents(definition, options));
+    options.withRelated = formatPopulateOptions(definition, options.withRelated).concat(
+      populateComponents(definition)
+    );
   }
 };
 
-const populateAssociations = (definition, { prefix = '', publicationState } = {}) => {
+const populateAssociations = (definition, { prefix = '' } = {}) => {
   return definition.associations
     .filter(ast => ast.autoPopulate !== false)
     .map(assoc => {
@@ -35,16 +34,15 @@ const populateAssociations = (definition, { prefix = '', publicationState } = {}
         return formatPolymorphicPopulate({
           assoc,
           prefix,
-          publicationState,
         });
       }
 
-      return formatAssociationPopulate({ assoc }, { prefix, publicationState });
+      return formatAssociationPopulate({ assoc, prefix });
     })
     .reduce((acc, val) => acc.concat(val), []);
 };
 
-const populateBareAssociations = (definition, { prefix = '', publicationState } = {}) => {
+const populateBareAssociations = (definition, { prefix = '' } = {}) => {
   return (definition.associations || [])
     .filter(ast => ast.autoPopulate !== false)
     .map(assoc => {
@@ -52,12 +50,11 @@ const populateBareAssociations = (definition, { prefix = '', publicationState } 
         return formatPolymorphicPopulate({
           assoc,
           prefix,
-          publicationState,
         });
       }
 
       const path = `${prefix}${assoc.alias}`;
-      const assocModel = strapi.db.getModelByAssoc(assoc);
+      const assocModel = findModelByAssoc({ assoc });
 
       const polyAssocs = assocModel.associations
         .filter(assoc => isPolymorphic({ assoc }))
@@ -65,24 +62,17 @@ const populateBareAssociations = (definition, { prefix = '', publicationState } 
           formatPolymorphicPopulate({
             assoc,
             prefix: `${path}.`,
-            publicationState,
           })
         );
 
-      return [
-        pq.bindPopulateQueries([path], {
-          publicationState: { query: publicationState, model: assocModel },
-        }),
-        ...polyAssocs,
-      ];
+      return [path, ...polyAssocs];
     })
     .reduce((acc, val) => acc.concat(val), []);
 };
 
-const formatAssociationPopulate = ({ assoc, prefix = '' }, options = {}) => {
-  const { publicationState } = options;
+const formatAssociationPopulate = ({ assoc, prefix = '' }) => {
   const path = `${prefix}${assoc.alias}`;
-  const assocModel = strapi.db.getModelByAssoc(assoc);
+  const assocModel = findModelByAssoc({ assoc });
 
   const polyAssocs = assocModel.associations
     .filter(assoc => isPolymorphic({ assoc }))
@@ -90,35 +80,28 @@ const formatAssociationPopulate = ({ assoc, prefix = '' }, options = {}) => {
       formatPolymorphicPopulate({
         assoc,
         prefix: `${path}.`,
-        publicationState,
       })
     );
 
-  const components = populateComponents(assocModel, { prefix: `${path}.`, publicationState });
+  const components = populateComponents(assocModel, { prefix: `${path}.` });
 
-  return [
-    pq.bindPopulateQueries([path], {
-      publicationState: { query: publicationState, model: assocModel },
-    }),
-    ...polyAssocs,
-    ...components,
-  ];
+  return [path, ...polyAssocs, ...components];
 };
 
-const populateComponents = (definition, { prefix = '', publicationState } = {}) => {
+const populateComponents = (definition, { prefix = '' } = {}) => {
   return getComponentAttributes(definition)
     .map(key => {
       const attribute = definition.attributes[key];
       const autoPopulate = _.get(attribute, ['autoPopulate'], true);
 
       if (autoPopulate === true) {
-        return populateComponent(key, attribute, { prefix, publicationState });
+        return populateComponent(key, attribute, { prefix });
       }
     }, [])
     .reduce((acc, val) => acc.concat(val), []);
 };
 
-const populateComponent = (key, attr, { prefix = '', publicationState } = {}) => {
+const populateComponent = (key, attr, { prefix = '' } = {}) => {
   const path = `${prefix}${key}.component`;
   const componentPrefix = `${path}.`;
 
@@ -129,12 +112,10 @@ const populateComponent = (key, attr, { prefix = '', publicationState } = {}) =>
       const component = strapi.components[key];
       const assocs = populateBareAssociations(component, {
         prefix: componentPrefix,
-        publicationState,
       });
 
       const components = populateComponents(component, {
         prefix: componentPrefix,
-        publicationState,
       });
 
       return acc.concat([path, ...assocs, ...components]);
@@ -144,18 +125,16 @@ const populateComponent = (key, attr, { prefix = '', publicationState } = {}) =>
   const component = strapi.components[attr.component];
   const assocs = populateBareAssociations(component, {
     prefix: componentPrefix,
-    publicationState,
   });
 
   const components = populateComponents(component, {
     prefix: componentPrefix,
-    publicationState,
   });
 
   return [path, ...assocs, ...components];
 };
 
-const formatPopulateOptions = (definition, { withRelated, publicationState } = {}) => {
+const formatPopulateOptions = (definition, withRelated) => {
   if (!Array.isArray(withRelated)) withRelated = [withRelated];
 
   const obj = withRelated.reduce((acc, key) => {
@@ -179,14 +158,17 @@ const formatPopulateOptions = (definition, { withRelated, publicationState } = {
 
       if (isComponent(tmpModel, part)) {
         if (attr.type === 'dynamiczone') {
-          newKey = `${prefix}${part}.component`;
+          const path = `${prefix}${part}.component`;
+          newKey = path;
           break;
         }
 
         tmpModel = strapi.components[attr.component];
         // add component path and there relations / images
-        newKey = `${prefix}${part}.component`;
-        prefix = `${newKey}.`;
+        const path = `${prefix}${part}.component`;
+
+        newKey = path;
+        prefix = `${path}.`;
         continue;
       }
 
@@ -194,13 +176,12 @@ const formatPopulateOptions = (definition, { withRelated, publicationState } = {
 
       if (!assoc) return acc;
 
-      tmpModel = strapi.db.getModelByAssoc(assoc);
+      tmpModel = findModelByAssoc({ assoc });
 
       if (isPolymorphic({ assoc })) {
         const path = formatPolymorphicPopulate({
           assoc,
           prefix,
-          publicationState,
         });
 
         return _.extend(acc, path);
@@ -208,44 +189,29 @@ const formatPopulateOptions = (definition, { withRelated, publicationState } = {
 
       newKey = `${prefix}${part}`;
       prefix = `${newKey}.`;
-
-      _.extend(acc, {
-        [newKey]: pq.extendWithPopulateQueries([obj[newKey], acc[newKey]], {
-          publicationState: { query: publicationState, model: tmpModel },
-        }),
-      });
     }
 
+    acc[newKey] = obj[key];
     return acc;
   }, {});
 
   return [finalObj];
 };
 
-const formatPolymorphicPopulate = ({ assoc, prefix = '', publicationState }) => {
-  const model = strapi.db.getModelByAssoc(assoc);
-  const populateOptions = {
-    publicationState: { query: publicationState, model },
-  };
-
+const formatPolymorphicPopulate = ({ assoc, prefix = '' }) => {
   // MorphTo side.
   if (assoc.related) {
-    return pq.bindPopulateQueries([`${prefix}${assoc.alias}.related`], populateOptions);
+    return { [`${prefix}${assoc.alias}.related`]: () => {} };
   }
 
   // oneToMorph or manyToMorph side.
   // Retrieve collection name because we are using it to build our hidden model.
-  const path = `${prefix}${assoc.alias}.${model.collectionName}`;
+  const model = findModelByAssoc({ assoc });
 
   return {
-    [path]: pq.extendWithPopulateQueries(
-      [
-        qb => {
-          qb.orderBy('created_at', 'desc');
-        },
-      ],
-      populateOptions
-    ),
+    [`${prefix}${assoc.alias}.${model.collectionName}`]: function(query) {
+      query.orderBy('created_at', 'desc');
+    },
   };
 };
 

@@ -1,10 +1,8 @@
-'use strict';
-
 // Helpers.
-const _ = require('lodash');
 const { registerAndLogin } = require('../../../test/helpers/auth');
 const { createAuthRequest } = require('../../../test/helpers/request');
 const createModelsUtils = require('../../../test/helpers/models');
+const _ = require('lodash');
 
 let rq;
 let graphqlQuery;

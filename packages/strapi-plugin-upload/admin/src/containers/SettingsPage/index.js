@@ -58,10 +58,7 @@ const SettingsPage = () => {
         });
       }
 
-      strapi.notification.toggle({
-        type: 'success',
-        message: { id: 'notification.form.success.fields' },
-      });
+      strapi.notification.success('notification.form.success.fields');
     } catch (err) {
       console.error(err);
     }
@@ -144,22 +141,6 @@ const SettingsPage = () => {
                 onChange={handleChange}
                 type="bool"
                 value={modifiedData.sizeOptimization}
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="col-6">
-              <Inputs
-                label={formatMessage({
-                  id: getTrad('settings.form.autoOrientation.label'),
-                })}
-                description={formatMessage({
-                  id: getTrad('settings.form.autoOrientation.description'),
-                })}
-                name="autoOrientation"
-                onChange={handleChange}
-                type="bool"
-                value={modifiedData.autoOrientation}
               />
             </div>
           </div>

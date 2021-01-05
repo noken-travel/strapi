@@ -28,10 +28,7 @@ const InstalledPluginsPage = () => {
       }
     } catch (err) {
       strapi.unlockApp();
-      strapi.notification.toggle({
-        type: 'warning',
-        message: { id: 'app.components.listPluginsPage.deletePlugin.error' },
-      });
+      strapi.notification.error('app.components.listPluginsPage.deletePlugin.error');
     }
   };
 

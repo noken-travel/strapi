@@ -1,5 +1,3 @@
-'use strict';
-
 const uploadService = require('../Upload');
 
 describe('Upload service', () => {

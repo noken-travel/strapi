@@ -1,7 +1,6 @@
 module.exports = {
   parser: 'babel-eslint',
   extends: [
-    'airbnb',
     'eslint:recommended',
     'plugin:react/recommended',
     'plugin:redux-saga/recommended',
@@ -37,13 +36,13 @@ module.exports = {
     MODE: true,
     NODE_ENV: true,
   },
+  extends: ['airbnb'],
   settings: {
     react: {
       version: '16.5.2',
     },
   },
   rules: {
-    'import/no-unresolved': 0,
     'generator-star-spacing': 0,
     'no-console': 0,
     'require-atomic-updates': 0,
@@ -57,6 +56,19 @@ module.exports = {
       2,
       {
         treatUndefinedAsUnspecified: true,
+      },
+    ],
+    indent: [
+      2,
+      2,
+      {
+        flatTernaryExpressions: false,
+        SwitchCase: 1,
+        ignoredNodes: [
+          'ConditionalExpression',
+          "VariableDeclarator[kind='const']",
+          'TemplateLiteral',
+        ],
       },
     ],
     'template-curly-spacing': 0,
@@ -111,11 +123,9 @@ module.exports = {
     'react/destructuring-assignment': 0,
     'react/jsx-filename-extension': [1, { extensions: ['.js', '.jsx'] }],
     'react/forbid-prop-types': 0,
-    'react/no-unused-prop-types': 2,
     'react/jsx-props-no-spreading': 0,
     'react/jsx-one-expression-per-line': 0,
     'react/state-in-constructor': 0,
     'react/static-property-placement': 0,
-    'react/display-name': 0,
   },
 };

@@ -7,14 +7,12 @@ import trads from './translations';
 
 export default strapi => {
   const pluginDescription = pluginPkg.strapi.description || pluginPkg.description;
-  const icon = pluginPkg.strapi.icon;
-  const name = pluginPkg.strapi.name;
 
   const plugin = {
     blockerComponent: null,
     blockerComponentProps: {},
     description: pluginDescription,
-    icon,
+    icon: pluginPkg.strapi.icon,
     id: pluginId,
     initializer: Initializer,
     injectedComponents: [],
@@ -22,30 +20,12 @@ export default strapi => {
     isRequired: pluginPkg.strapi.required || false,
     layout: null,
     lifecycles,
+    leftMenuLinks: [],
+    leftMenuSections: [],
     mainComponent: App,
-    name,
+    name: pluginPkg.strapi.name,
     preventComponentRendering: false,
     trads,
-    menu: {
-      pluginsSectionLinks: [
-        {
-          destination: `/plugins/${pluginId}`,
-          icon,
-          label: {
-            id: `${pluginId}.plugin.name`,
-            defaultMessage: name,
-          },
-          name,
-          permissions: [
-            // Uncomment to set the permissions of the plugin here
-            // {
-            //   action: '', // the action name should be plugins::plugin-name.actionType
-            //   subject: null,
-            // },
-          ],
-        },
-      ],
-    },
   };
 
   return strapi.registerPlugin(plugin);

@@ -6,32 +6,27 @@
 
 import React, { useEffect, useReducer, useRef, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
+
 import { Header, List } from '@buffetjs/custom';
 import { Button } from '@buffetjs/core';
 import { Plus } from '@buffetjs/icons';
-import { omit } from 'lodash';
-import { useIntl } from 'react-intl';
+
 import {
   request,
+  useGlobalContext,
   ListButton,
   PopUpWarning,
-  useUserPermissions,
-  LoadingIndicatorPage,
 } from 'strapi-helper-plugin';
-import adminPermissions from '../../../permissions';
-import PageTitle from '../../../components/SettingsPageTitle';
-import { EmptyList, ListRow } from '../../../components/Webhooks';
+
+import ListRow from '../../../components/ListRow';
+import EmptyList from '../../../components/EmptyList';
 import Wrapper from './Wrapper';
+
 import reducer, { initialState } from './reducer';
 
 function ListView() {
-  const {
-    isLoading,
-    allowedActions: { canCreate, canRead, canUpdate, canDelete },
-  } = useUserPermissions(adminPermissions.settings.webhooks);
-
-  const isMounted = useRef(true);
-  const { formatMessage } = useIntl();
+  const isMounted = useRef();
+  const { formatMessage } = useGlobalContext();
   const [showModal, setShowModal] = useState(false);
   const [reducerState, dispatch] = useReducer(reducer, initialState);
   const { push } = useHistory();
@@ -41,19 +36,13 @@ function ListView() {
 
   useEffect(() => {
     isMounted.current = true;
+    fetchData();
 
-    return () => {
-      isMounted.current = false;
-    };
+    return () => (isMounted.current = false);
   }, []);
 
-  useEffect(() => {
-    if (canRead) {
-      fetchData();
-    }
-  }, [canRead]);
-
-  const getWebhookIndex = id => webhooks.findIndex(webhook => webhook.id === id);
+  const getWebhookIndex = id =>
+    webhooks.findIndex(webhook => webhook.id === id);
 
   // New button
   const addBtnLabel = formatMessage({
@@ -66,13 +55,6 @@ function ListView() {
     color: 'primary',
     type: 'button',
     icon: <Plus fill="#007eff" width="11px" height="11px" />,
-    Component: props => {
-      if (canCreate) {
-        return <Button {...props} />;
-      }
-
-      return null;
-    },
   };
 
   // Header props
@@ -104,21 +86,17 @@ function ListView() {
   }`;
   const title = `${rowsCount} ${titleLabel}`;
 
-  /* eslint-disable indent */
-  const deleteButtonProps = canDelete
-    ? {
-        color: 'delete',
-        disabled: !(webhooksToDelete.length > 0),
-        label: formatMessage({ id: 'app.utils.delete' }),
-        onClick: () => setShowModal(true),
-        type: 'button',
-      }
-    : null;
-  /* eslint-enable indent */
+  const buttonProps = {
+    color: 'delete',
+    disabled: !(webhooksToDelete.length > 0),
+    label: formatMessage({ id: 'Settings.webhooks.list.button.delete' }),
+    onClick: () => setShowModal(true),
+    type: 'button',
+  };
 
   const listProps = {
     title,
-    button: deleteButtonProps,
+    button: buttonProps,
     items: webhooks,
   };
 
@@ -137,10 +115,7 @@ function ListView() {
     } catch (err) {
       if (isMounted.current) {
         if (err.code !== 20) {
-          strapi.notification.toggle({
-            type: 'warning',
-            message: { id: 'notification.error' },
-          });
+          strapi.notification.error('notification.error');
         }
       }
     }
@@ -174,10 +149,7 @@ function ListView() {
       });
     } catch (err) {
       if (err.code !== 20) {
-        strapi.notification.toggle({
-          type: 'warning',
-          message: { id: 'notification.error' },
-        });
+        strapi.notification.error('notification.error');
       }
     }
     setShowModal(false);
@@ -202,10 +174,7 @@ function ListView() {
     } catch (err) {
       if (isMounted.current) {
         if (err.code !== 20) {
-          strapi.notification.toggle({
-            type: 'warning',
-            message: { id: 'notification.error' },
-          });
+          strapi.notification.error('notification.error');
         }
       }
     }
@@ -254,10 +223,7 @@ function ListView() {
         });
 
         if (err.code !== 20) {
-          strapi.notification.toggle({
-            type: 'warning',
-            message: { id: 'notification.error' },
-          });
+          strapi.notification.error('notification.error');
         }
       }
     }
@@ -267,40 +233,33 @@ function ListView() {
     push(`${pathname}/${to}`);
   };
 
-  if (isLoading) {
-    return <LoadingIndicatorPage />;
-  }
-
   return (
     <Wrapper>
-      <PageTitle name="Webhooks" />
       <Header {...headerProps} />
-      {canRead && (
-        <div className="list-wrapper">
-          {rowsCount > 0 ? (
-            <List
-              {...listProps}
-              customRowComponent={props => {
-                return (
-                  <ListRow
-                    {...props}
-                    canUpdate={canUpdate}
-                    canDelete={canDelete}
-                    onCheckChange={handleChange}
-                    onEditClick={handleGoTo}
-                    onDeleteCLick={handleDeleteClick}
-                    onEnabledChange={handleEnabledChange}
-                    itemsToDelete={webhooksToDelete}
-                  />
-                );
-              }}
-            />
-          ) : (
-            <EmptyList />
-          )}
-          <ListButton>{canCreate && <Button {...omit(newButtonProps, 'Component')} />}</ListButton>
-        </div>
-      )}
+      <div className="list-wrapper">
+        {rowsCount > 0 ? (
+          <List
+            {...listProps}
+            customRowComponent={props => {
+              return (
+                <ListRow
+                  {...props}
+                  onCheckChange={handleChange}
+                  onEditClick={handleGoTo}
+                  onDeleteCLick={handleDeleteClick}
+                  onEnabledChange={handleEnabledChange}
+                  itemsToDelete={webhooksToDelete}
+                />
+              );
+            }}
+          />
+        ) : (
+          <EmptyList />
+        )}
+        <ListButton>
+          <Button {...newButtonProps} />
+        </ListButton>
+      </div>
       <PopUpWarning
         isOpen={showModal}
         toggleModal={() => setShowModal(!showModal)}

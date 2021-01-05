@@ -1,5 +1,3 @@
-'use strict';
-
 // Helpers.
 const { registerAndLogin } = require('../../../test/helpers/auth');
 const createModelsUtils = require('../../../test/helpers/models');
@@ -32,13 +30,16 @@ describe('Create Strapi API End to End', () => {
       form.reference,
       form.product,
     ]);
-
-    await modelsUtils.cleanupContentTypes(['article', 'tag', 'category', 'reference', 'product']);
   }, 60000);
 
   afterAll(async () => {
-    await modelsUtils.cleanupContentTypes(['article', 'tag', 'category', 'reference', 'product']);
-    await modelsUtils.deleteContentTypes(['article', 'tag', 'category', 'reference', 'product']);
+    await modelsUtils.deleteContentTypes([
+      'article',
+      'tag',
+      'category',
+      'reference',
+      'product',
+    ]);
   }, 60000);
 
   describe('Test manyToMany relation (article - tag) with Content Manager', () => {
@@ -47,10 +48,6 @@ describe('Create Strapi API End to End', () => {
         articles: [],
         tags: [],
       };
-    });
-
-    afterAll(async () => {
-      await modelsUtils.cleanupContentTypes(['article', 'tag']);
     });
 
     test('Create tag1', async () => {
@@ -240,10 +237,6 @@ describe('Create Strapi API End to End', () => {
         articles: [],
         categories: [],
       };
-    });
-
-    afterAll(async () => {
-      await modelsUtils.cleanupContentTypes(['article', 'category']);
     });
 
     test('Create cat1', async () => {
@@ -465,10 +458,6 @@ describe('Create Strapi API End to End', () => {
       };
     });
 
-    afterAll(async () => {
-      await modelsUtils.cleanupContentTypes(['article', 'reference']);
-    });
-
     test('Create ref1', async () => {
       const { body } = await rq({
         url: '/references',
@@ -547,17 +536,6 @@ describe('Create Strapi API End to End', () => {
   });
 
   describe('Test oneWay relation (reference - tag) with Content Manager', () => {
-    beforeAll(() => {
-      data = {
-        tags: [],
-        references: [],
-      };
-    });
-
-    afterAll(async () => {
-      await modelsUtils.cleanupContentTypes(['reference', 'tag']);
-    });
-
     test('Attach Tag to a Reference', async () => {
       await rq({
         url: '/tags',
@@ -566,8 +544,6 @@ describe('Create Strapi API End to End', () => {
           name: 'tag111',
         },
       }).then(({ body: tagToCreate }) => {
-        data.tags.push(tagToCreate);
-
         return rq({
           url: '/references',
           method: 'POST',
@@ -576,7 +552,6 @@ describe('Create Strapi API End to End', () => {
             tag: tagToCreate,
           },
         }).then(({ body }) => {
-          data.references.push(body);
           expect(body.tag.id).toBe(tagToCreate.id);
         });
       });
@@ -591,8 +566,6 @@ describe('Create Strapi API End to End', () => {
         },
       });
 
-      data.tags.push(tagToCreate);
-
       const { body: referenceToCreate } = await rq({
         url: '/references',
         method: 'POST',
@@ -601,8 +574,6 @@ describe('Create Strapi API End to End', () => {
           tag: tagToCreate,
         },
       });
-
-      data.references.push(referenceToCreate);
 
       expect(referenceToCreate.tag.id).toBe(tagToCreate.id);
 
@@ -626,8 +597,6 @@ describe('Create Strapi API End to End', () => {
         },
       });
 
-      data.tags.push(tagToCreate);
-
       const { body: referenceToCreate } = await rq({
         url: '/references',
         method: 'POST',
@@ -636,8 +605,6 @@ describe('Create Strapi API End to End', () => {
           tag: tagToCreate,
         },
       });
-
-      data.references.push(referenceToCreate);
 
       await rq({
         url: `/tags/${tagToCreate.id}`,
@@ -649,7 +616,8 @@ describe('Create Strapi API End to End', () => {
         method: 'GET',
       });
 
-      if (!referenceToGet.tag || Object.keys(referenceToGet.tag).length == 0) return;
+      if (!referenceToGet.tag || Object.keys(referenceToGet.tag).length == 0)
+        return;
       expect(referenceToGet.tag).toBe(null);
     });
   });

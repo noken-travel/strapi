@@ -1,5 +1,3 @@
-'use strict';
-
 const _ = require('lodash');
 
 /**
@@ -51,7 +49,7 @@ module.exports = {
     }
 
     type UsersPermissionsLoginPayload {
-      jwt: String
+      jwt: String!
       user: UsersPermissionsMe!
     }
 

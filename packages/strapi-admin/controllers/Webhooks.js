@@ -1,9 +1,18 @@
 'use strict';
 
 const _ = require('lodash');
-const { yup, formatYupErrors, webhook: webhookUtils } = require('strapi-utils');
+const { yup, formatYupErrors } = require('strapi-utils');
 
-const urlRegex = /^(?:([a-z0-9+.-]+):\/\/)(?:\S+(?::\S*)?@)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9_]-*)*[a-z\u00a1-\uffff0-9_]+)(?:\.(?:[a-z\u00a1-\uffff0-9_]-*)*[a-z\u00a1-\uffff0-9_]+)*\.?)(?::\d{2,5})?(?:[/?#]\S*)?$/;
+const ALLOWED_EVENTS = [
+  'entry.create',
+  'entry.update',
+  'entry.delete',
+  'media.create',
+  'media.update',
+  'media.delete',
+];
+
+const urlRegex = /^(?:([a-z0-9+.-]+):\/\/)(?:\S+(?::\S*)?@)?(?:(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*\.?)(?::\d{2,5})?(?:[/?#]\S*)?$/;
 
 const webhookValidator = yup
   .object({
@@ -33,7 +42,7 @@ const webhookValidator = yup
       .of(
         yup
           .string()
-          .oneOf(_.values(webhookUtils.webhookEvents))
+          .oneOf(ALLOWED_EVENTS)
           .required()
       )
       .min(1)

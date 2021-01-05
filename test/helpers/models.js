@@ -1,5 +1,3 @@
-'use strict';
-
 const waitRestart = require('./waitRestart');
 
 module.exports = ({ rq }) => {
@@ -63,42 +61,6 @@ module.exports = ({ rq }) => {
     }
   }
 
-  async function modifyContentType(data) {
-    const sanitizedData = { ...data };
-    delete sanitizedData.editable;
-    delete sanitizedData.restrictRelationsTo;
-
-    await rq({
-      url: `/content-type-builder/content-types/application::${sanitizedData.name}.${sanitizedData.name}`,
-      method: 'PUT',
-      body: {
-        contentType: {
-          connection: 'default',
-          ...sanitizedData,
-        },
-      },
-    });
-
-    await waitRestart();
-  }
-
-  async function modifyContentTypes(models) {
-    for (let model of models) {
-      await modifyContentType(model);
-    }
-  }
-
-  async function getContentTypeSchema(model) {
-    const { body } = await rq({
-      url: '/content-type-builder/content-types',
-      method: 'GET',
-    });
-
-    const contentType = body.data.find(ct => ct.uid === `application::${model}.${model}`);
-
-    return (contentType || {}).schema;
-  }
-
   async function deleteContentType(model) {
     await rq({
       url: `/content-type-builder/content-types/application::${model}.${model}`,
@@ -114,44 +76,14 @@ module.exports = ({ rq }) => {
     }
   }
 
-  async function cleanupContentTypes(models) {
-    for (const model of models) {
-      await cleanupContentType(model);
-    }
-  }
-
-  async function cleanupContentType(model) {
-    const { body } = await rq({
-      url: `/content-manager/collection-types/application::${model}.${model}`,
-      qs: {
-        pageSize: 1000,
-      },
-      method: 'GET',
-    });
-
-    if (Array.isArray(body.results) && body.results.length > 0) {
-      await rq({
-        url: `/content-manager/collection-types/application::${model}.${model}/actions/bulkDelete`,
-        method: 'POST',
-        body: {
-          ids: body.results.map(({ id }) => id),
-        },
-      });
-    }
-  }
-
   return {
     createComponent,
     deleteComponent,
+
     createContentType,
     createContentTypes,
     createContentTypeWithType,
     deleteContentType,
     deleteContentTypes,
-    modifyContentType,
-    modifyContentTypes,
-    getContentTypeSchema,
-    cleanupContentType,
-    cleanupContentTypes,
   };
 };

@@ -3,264 +3,121 @@
     {
       "method": "GET",
       "path": "/content-types",
-      "handler": "content-types.findContentTypes",
+      "handler": "ContentTypes.listContentTypes",
       "config": {
         "policies": []
       }
     },
     {
       "method": "GET",
-      "path": "/content-types/:uid/configuration",
-      "handler": "content-types.findContentTypeConfiguration",
+      "path": "/content-types/:uid",
+      "handler": "ContentTypes.findContentType",
       "config": {
         "policies": []
       }
     },
     {
       "method": "PUT",
-      "path": "/content-types/:uid/configuration",
-      "handler": "content-types.updateContentTypeConfiguration",
+      "path": "/content-types/:uid",
+      "handler": "ContentTypes.updateContentType",
       "config": {
-        "policies": ["admin::isAuthenticatedAdmin"]
+        "policies": []
       }
     },
-
     {
       "method": "GET",
       "path": "/components",
-      "handler": "components.findComponents",
+      "handler": "Components.listComponents",
       "config": {
         "policies": []
       }
     },
     {
       "method": "GET",
-      "path": "/components/:uid/configuration",
-      "handler": "components.findComponentConfiguration",
+      "path": "/components/:uid",
+      "handler": "Components.findComponent",
       "config": {
         "policies": []
       }
     },
     {
       "method": "PUT",
-      "path": "/components/:uid/configuration",
-      "handler": "components.updateComponentConfiguration",
-      "config": {
-        "policies": []
-      }
-    },
-
-    {
-      "method": "POST",
-      "path": "/uid/generate",
-      "handler": "uid.generateUID",
+      "path": "/components/:uid",
+      "handler": "Components.updateComponent",
       "config": {
         "policies": []
       }
     },
     {
       "method": "POST",
-      "path": "/uid/check-availability",
-      "handler": "uid.checkUIDAvailability",
+      "path": "/explorer/uid/generate",
+      "handler": "ContentManager.generateUID",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/explorer/uid/check-availability",
+      "handler": "ContentManager.checkUIDAvailability",
       "config": {
         "policies": []
       }
     },
     {
       "method": "GET",
-      "path": "/relations/:model/:targetField",
-      "handler": "relations.find",
+      "path": "/explorer/:model",
+      "handler": "ContentManager.find",
       "config": {
-        "policies": [
-          "admin::isAuthenticatedAdmin",
-          [
-            "plugins::content-manager.hasPermissions",
-            [
-              "plugins::content-manager.explorer.create",
-              "plugins::content-manager.explorer.update"
-            ],
-            { "hasAtLeastOne": true }
-          ]
-        ]
+        "policies": ["routing"]
       }
     },
     {
       "method": "GET",
-      "path": "/single-types/:model",
-      "handler": "single-types.find",
+      "path": "/explorer/:model/count",
+      "handler": "ContentManager.count",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.read"]]
-        ]
+        "policies": ["routing"]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/explorer/:model/:id",
+      "handler": "ContentManager.findOne",
+      "config": {
+        "policies": ["routing"]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/explorer/:model",
+      "handler": "ContentManager.create",
+      "config": {
+        "policies": ["routing"]
       }
     },
     {
       "method": "PUT",
-      "path": "/single-types/:model",
-      "handler": "single-types.createOrUpdate",
+      "path": "/explorer/:model/:id",
+      "handler": "ContentManager.update",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          [
-            "plugins::content-manager.hasPermissions",
-            [
-              "plugins::content-manager.explorer.create",
-              "plugins::content-manager.explorer.update"
-            ],
-            { "hasAtLeastOne": true }
-          ]
-        ]
+        "policies": ["routing"]
       }
     },
     {
       "method": "DELETE",
-      "path": "/single-types/:model",
-      "handler": "single-types.delete",
+      "path": "/explorer/deleteAll/:model",
+      "handler": "ContentManager.deleteMany",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.delete"]]
-        ]
-      }
-    },
-    {
-      "method": "POST",
-      "path": "/single-types/:model/actions/publish",
-      "handler": "single-types.publish",
-      "config": {
-        "policies": [
-          "routing",
-          "plugins::content-manager.has-draft-and-publish",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.publish"]]
-        ]
-      }
-    },
-    {
-      "method": "POST",
-      "path": "/single-types/:model/actions/unpublish",
-      "handler": "single-types.unpublish",
-      "config": {
-        "policies": [
-          "routing",
-          "plugins::content-manager.has-draft-and-publish",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.publish"]]
-        ]
-      }
-    },
-    {
-      "method": "GET",
-      "path": "/collection-types/:model/:id/:targetField",
-      "handler": "collection-types.previewManyRelations",
-      "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.read"]]
-        ]
-      }
-    },
-    {
-      "method": "GET",
-      "path": "/collection-types/:model",
-      "handler": "collection-types.find",
-      "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.read"]]
-        ]
-      }
-    },
-    {
-      "method": "POST",
-      "path": "/collection-types/:model",
-      "handler": "collection-types.create",
-      "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.create"]]
-        ]
-      }
-    },
-    {
-      "method": "GET",
-      "path": "/collection-types/:model/:id",
-      "handler": "collection-types.findOne",
-      "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.read"]]
-        ]
-      }
-    },
-    {
-      "method": "PUT",
-      "path": "/collection-types/:model/:id",
-      "handler": "collection-types.update",
-      "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.update"]]
-        ]
+        "policies": ["routing"]
       }
     },
     {
       "method": "DELETE",
-      "path": "/collection-types/:model/:id",
-      "handler": "collection-types.delete",
+      "path": "/explorer/:model/:id",
+      "handler": "ContentManager.delete",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.delete"]]
-        ]
-      }
-    },
-    {
-      "method": "POST",
-      "path": "/collection-types/:model/:id/actions/publish",
-      "handler": "collection-types.publish",
-      "config": {
-        "policies": [
-          "routing",
-          "plugins::content-manager.has-draft-and-publish",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.publish"]]
-        ]
-      }
-    },
-    {
-      "method": "POST",
-      "path": "/collection-types/:model/:id/actions/unpublish",
-      "handler": "collection-types.unpublish",
-      "config": {
-        "policies": [
-          "routing",
-          "plugins::content-manager.has-draft-and-publish",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.publish"]]
-        ]
-      }
-    },
-    {
-      "method": "POST",
-      "path": "/collection-types/:model/actions/bulkDelete",
-      "handler": "collection-types.bulkDelete",
-      "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.delete"]]
-        ]
+        "policies": ["routing"]
       }
     }
   ]
