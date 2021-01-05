@@ -16,7 +16,10 @@ module.exports = {
         }
       : filters;
 
-    return strapi.entityService.find({ params: queryFilter, populate }, { model: params.model });
+    return strapi.entityService.find(
+      { params: queryFilter, populate },
+      { model: params.model }
+    );
   },
 
   fetch(params, populate) {
