@@ -17,7 +17,7 @@ import { Inputs } from '@buffetjs/custom';
 import { useGlobalContext, prefixFileUrlWithBackendUrl } from 'strapi-helper-plugin';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
-import { createFileToDownloadName } from '../../utils';
+import { createFileToDownloadName, getTrad } from '../../utils';
 import CardControl from '../CardControl';
 import CardControlsWrapper from '../CardControlsWrapper';
 import CardPreview from '../CardPreview';
@@ -38,8 +38,6 @@ import isVideoType from './utils/isVideoType';
 const EditForm = forwardRef(
   (
     {
-      canCopyLink,
-      canDownload,
       components,
       fileToEdit,
       isEditingUploadedFile,
@@ -135,9 +133,7 @@ const EditForm = forwardRef(
     };
 
     const handleChange = ({ target: { files } }) => {
-      if (files[0]) {
-        onChange({ target: { name: 'file', value: files[0] } });
-      }
+      onChange({ target: { name: 'file', value: files[0] } });
     };
 
     const handleClick = async () => {
@@ -153,23 +149,19 @@ const EditForm = forwardRef(
         try {
           const canvas = cropper.current.getCroppedCanvas();
 
-          canvas.toBlob(
-            async blob => {
-              const {
-                file: { lastModifiedDate, lastModified, name },
-              } = fileToEdit;
+          canvas.toBlob(async blob => {
+            const {
+              file: { lastModifiedDate, lastModified, name },
+            } = fileToEdit;
 
-              resolve(
-                new File([blob], name, {
-                  type: mimeType,
-                  lastModified,
-                  lastModifiedDate,
-                })
-              );
-            },
-            mimeType,
-            1
-          );
+            resolve(
+              new File([blob], name, {
+                type: mimeType,
+                lastModified,
+                lastModifiedDate,
+              })
+            );
+          });
         } catch (err) {
           reject();
         }
@@ -193,10 +185,7 @@ const EditForm = forwardRef(
     };
 
     const handleCopy = () => {
-      strapi.notification.toggle({
-        type: 'info',
-        message: { id: 'notification.link-copied' },
-      });
+      strapi.notification.info(getTrad('notification.link-copied'));
     };
 
     const handleClickDownload = () => {
@@ -247,14 +236,12 @@ const EditForm = forwardRef(
                             />
                             {fileURL && (
                               <>
-                                {canDownload && (
-                                  <CardControl
-                                    color="#9EA7B8"
-                                    onClick={handleClickDownload}
-                                    type="download"
-                                    title="download"
-                                  />
-                                )}
+                                <CardControl
+                                  color="#9EA7B8"
+                                  onClick={handleClickDownload}
+                                  type="download"
+                                  title="download"
+                                />
                                 <a
                                   title={fileToEdit.fileInfo.name}
                                   style={{ display: 'none' }}
@@ -262,14 +249,13 @@ const EditForm = forwardRef(
                                 >
                                   hidden
                                 </a>
-                                {canCopyLink && (
-                                  <CopyToClipboard
-                                    onCopy={handleCopy}
-                                    text={prefixFileUrlWithBackendUrl(fileURL)}
-                                  >
-                                    <CardControl color="#9EA7B8" type="link" title="copy-link" />
-                                  </CopyToClipboard>
-                                )}
+
+                                <CopyToClipboard
+                                  onCopy={handleCopy}
+                                  text={prefixFileUrlWithBackendUrl(fileURL)}
+                                >
+                                  <CardControl color="#9EA7B8" type="link" title="copy-link" />
+                                </CopyToClipboard>
                               </>
                             )}
                             {canCrop && (
@@ -391,8 +377,6 @@ const EditForm = forwardRef(
 );
 
 EditForm.defaultProps = {
-  canCopyLink: true,
-  canDownload: true,
   components: {
     CheckControl: CardControl,
   },
@@ -408,8 +392,6 @@ EditForm.defaultProps = {
 };
 
 EditForm.propTypes = {
-  canCopyLink: PropTypes.bool,
-  canDownload: PropTypes.bool,
   onAbortUpload: PropTypes.func,
   components: PropTypes.object,
   fileToEdit: PropTypes.object,

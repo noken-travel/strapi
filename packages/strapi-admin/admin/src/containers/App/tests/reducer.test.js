@@ -4,11 +4,10 @@ import {
   disableGlobalOverlayBlocker,
   enableGlobalOverlayBlocker,
   freezeApp,
-  getDataSucceeded,
-  getInfosDataSucceeded,
   pluginDeleted,
   pluginLoaded,
   unfreezeApp,
+  unsetHasUserPlugin,
   updatePlugin,
 } from '../actions';
 import appReducer from '../reducer';
@@ -18,7 +17,6 @@ describe('<App /> reducer', () => {
 
   beforeEach(() => {
     state = fromJS({
-      appInfos: {},
       autoReload: false,
       blockApp: false,
       currentEnvironment: 'development',
@@ -98,34 +96,9 @@ describe('<App /> reducer', () => {
     expect(appReducer(state, unfreezeApp())).toEqual(expectedResult);
   });
 
-  describe('GET_INFOS_DATA_SUCCEEDED', () => {
-    it('should handle the set the data correctly', () => {
-      const data = {
-        autoReload: true,
-        communityEdition: false,
-        currentEnvironment: 'test',
-        nodeVersion: 'v12.14.1',
-        strapiVersion: '3.2.1',
-      };
-      const expected = state
-        .set('appInfos', data)
-        .set('autoReload', true)
-        .set('currentEnvironment', 'test');
+  it('should handle the unsetHasUserPlugin action correclty', () => {
+    const expectedResult = state.set('hasUserPlugin', false);
 
-      expect(appReducer(state, getInfosDataSucceeded(data))).toEqual(expected);
-    });
-  });
-
-  describe('GET_DATA_SUCCEEDED', () => {
-    it('should handle the set the data correctly', () => {
-      const expected = state
-        .set('hasAdminUser', true)
-        .set('uuid', 'true')
-        .set('isLoading', false);
-
-      expect(appReducer(state, getDataSucceeded({ hasAdmin: true, uuid: 'true' }))).toEqual(
-        expected
-      );
-    });
+    expect(appReducer(state, unsetHasUserPlugin())).toEqual(expectedResult);
   });
 });

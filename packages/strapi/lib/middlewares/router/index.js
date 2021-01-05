@@ -27,13 +27,15 @@ module.exports = strapi => {
 
       strapi.router.prefix(strapi.config.get('middleware.settings.router.prefix', ''));
 
-      if (_.has(strapi.admin, 'config.routes')) {
+      if (!_.isEmpty(_.get(strapi.admin, 'config.routes', false))) {
+        // Create router for admin.
+        // Prefix router with the admin's name.
         const router = new Router({
           prefix: '/admin',
         });
 
-        _.get(strapi.admin, 'config.routes', []).forEach(route => {
-          composeEndpoint(route, { plugin: 'admin', router });
+        _.forEach(strapi.admin.config.routes, value => {
+          composeEndpoint(value, { router });
         });
 
         // Mount admin router on Strapi router

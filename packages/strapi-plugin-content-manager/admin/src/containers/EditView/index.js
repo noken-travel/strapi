@@ -2,12 +2,8 @@ import React, { memo, useCallback, useMemo, useEffect, useReducer, useRef } from
 import PropTypes from 'prop-types';
 import { get } from 'lodash';
 import { useHistory, useLocation, useRouteMatch } from 'react-router-dom';
-import { BackHeader, LiLink, CheckPermissions, useUserPermissions } from 'strapi-helper-plugin';
-import { Padded } from '@buffetjs/core';
-
+import { BackHeader, LiLink } from 'strapi-helper-plugin';
 import pluginId from '../../pluginId';
-import pluginPermissions from '../../permissions';
-import { generatePermissionsObject } from '../../utils';
 import Container from '../../components/Container';
 import DynamicZone from '../../components/DynamicZone';
 import FormWrapper from '../../components/FormWrapper';
@@ -22,38 +18,21 @@ import createAttributesLayout from './utils/createAttributesLayout';
 import { LinkWrapper, SubWrapper } from './components';
 import init from './init';
 import reducer, { initialState } from './reducer';
-import DeleteLink from './DeleteLink';
-import InformationCard from './InformationCard';
 
 /* eslint-disable  react/no-array-index-key */
 
-const EditView = ({
-  components,
-  currentEnvironment,
-  deleteLayout,
-  layouts,
-  models,
-  plugins,
-  slug,
-}) => {
+const EditView = ({ components, currentEnvironment, deleteLayout, layouts, plugins, slug }) => {
   const formatLayoutRef = useRef();
   formatLayoutRef.current = createAttributesLayout;
-  const { goBack } = useHistory();
-
+  // Retrieve push to programmatically navigate between views
+  const { push } = useHistory();
   // Retrieve the search and the pathname
-  const { pathname } = useLocation();
+  const { search, pathname } = useLocation();
   const {
     params: { contentType },
   } = useRouteMatch('/plugins/content-manager/:contentType');
-  const viewPermissions = useMemo(() => generatePermissionsObject(slug), [slug]);
-  const { allowedActions } = useUserPermissions(viewPermissions);
-
-  const isSingleType = useMemo(() => contentType === 'singleType', [contentType]);
-  const [{ formattedContentTypeLayout, isDraggingComponent }, dispatch] = useReducer(
-    reducer,
-    initialState,
-    () => init(initialState)
-  );
+  const isSingleType = contentType === 'singleType';
+  const [reducerState, dispatch] = useReducer(reducer, initialState, () => init(initialState));
   const allLayoutData = useMemo(() => get(layouts, [slug], {}), [layouts, slug]);
   const currentContentTypeLayoutData = useMemo(() => get(allLayoutData, ['contentType'], {}), [
     allLayoutData,
@@ -121,15 +100,23 @@ const EditView = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentContentTypeLayout, currentContentTypeSchema.attributes]);
 
+  const { formattedContentTypeLayout, isDraggingComponent } = reducerState.toJS();
+
+  // We can't use the getQueryParameters helper here because the search
+  // can contain 'redirectUrl' several times since we can navigate between documents
+  const redirectURL = search
+    .split('redirectUrl=')
+    .filter((_, index) => index !== 0)
+    .join('redirectUrl=');
+
+  const redirectToPreviousPage = () => push(redirectURL);
+
   return (
     <EditViewProvider
-      allowedActions={allowedActions}
       allLayoutData={allLayoutData}
       components={components}
-      isDraggingComponent={isDraggingComponent}
-      isSingleType={isSingleType}
       layout={currentContentTypeLayoutData}
-      models={models}
+      isDraggingComponent={isDraggingComponent}
       setIsDraggingComponent={() => {
         dispatch({
           type: 'SET_IS_DRAGGING_COMPONENT',
@@ -143,11 +130,10 @@ const EditView = ({
     >
       <EditViewDataManagerProvider
         allLayoutData={allLayoutData}
-        redirectToPreviousPage={goBack}
-        isSingleType={isSingleType}
+        redirectToPreviousPage={redirectToPreviousPage}
         slug={slug}
       >
-        <BackHeader onClick={goBack} />
+        <BackHeader onClick={redirectToPreviousPage} />
         <Container className="container-fluid">
           <Header />
           <div className="row" style={{ paddingTop: 3 }}>
@@ -201,6 +187,7 @@ const EditView = ({
                                   keys={name}
                                   layout={currentContentTypeLayoutData}
                                   name={name}
+                                  onChange={() => {}}
                                 />
                               </div>
                             );
@@ -212,9 +199,8 @@ const EditView = ({
                 );
               })}
             </div>
+
             <div className="col-md-12 col-lg-3">
-              <InformationCard />
-              <Padded size="smd" top />
               {currentContentTypeLayoutRelations.length > 0 && (
                 <SubWrapper style={{ padding: '0 20px 1px', marginBottom: '25px' }}>
                   <div style={{ paddingTop: '22px' }}>
@@ -245,27 +231,19 @@ const EditView = ({
               )}
               <LinkWrapper>
                 <ul>
-                  <CheckPermissions
-                    permissions={
-                      isSingleType
-                        ? pluginPermissions.singleTypesConfigurations
-                        : pluginPermissions.collectionTypesConfigurations
-                    }
-                  >
-                    <LiLink
-                      message={{
-                        id: 'app.links.configure-view',
-                      }}
-                      icon="layout"
-                      key={`${pluginId}.link`}
-                      url={`${
-                        isSingleType ? `${pathname}/` : ''
-                      }ctm-configurations/edit-settings/content-types`}
-                      onClick={() => {
-                        // emitEvent('willEditContentTypeLayoutFromEditView');
-                      }}
-                    />
-                  </CheckPermissions>
+                  <LiLink
+                    message={{
+                      id: 'app.links.configure-view',
+                    }}
+                    icon="layout"
+                    key={`${pluginId}.link`}
+                    url={`${
+                      isSingleType ? `${pathname}/` : ''
+                    }ctm-configurations/edit-settings/content-types`}
+                    onClick={() => {
+                      // emitEvent('willEditContentTypeLayoutFromEditView');
+                    }}
+                  />
                   {getInjectedComponents(
                     'editView',
                     'right.links',
@@ -273,7 +251,6 @@ const EditView = ({
                     currentEnvironment,
                     slug
                   )}
-                  {allowedActions.canDelete && <DeleteLink />}
                 </ul>
               </LinkWrapper>
             </div>
@@ -296,7 +273,6 @@ EditView.propTypes = {
   deleteLayout: PropTypes.func.isRequired,
   emitEvent: PropTypes.func,
   layouts: PropTypes.object.isRequired,
-  models: PropTypes.array.isRequired,
   plugins: PropTypes.object,
   slug: PropTypes.string.isRequired,
 };

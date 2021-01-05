@@ -1,21 +1,19 @@
 import {
   FREEZE_APP,
-  GET_DATA_SUCCEEDED,
-  GET_INFOS_DATA_SUCCEEDED,
   LOAD_PLUGIN,
   PLUGIN_DELETED,
   PLUGIN_LOADED,
   UNFREEZE_APP,
+  UNSET_HAS_USERS_PLUGIN,
   UPDATE_PLUGIN,
 } from '../constants';
 import {
   freezeApp,
   loadPlugin,
-  getInfosDataSucceeded,
-  getDataSucceeded,
   pluginDeleted,
   pluginLoaded,
   unfreezeApp,
+  unsetHasUserPlugin,
   updatePlugin,
 } from '../actions';
 
@@ -39,30 +37,6 @@ describe('<App /> actions', () => {
       };
 
       expect(unfreezeApp()).toEqual(expected);
-    });
-  });
-
-  describe('getDataSucceeded', () => {
-    it('shoudl return the correct type and the passed data', () => {
-      const data = { ok: true };
-      const expected = {
-        type: GET_DATA_SUCCEEDED,
-        data,
-      };
-
-      expect(getDataSucceeded(data)).toEqual(expected);
-    });
-  });
-
-  describe('getInfosDataSucceeded', () => {
-    it('shoudl return the correct type and the passed data', () => {
-      const data = { ok: true };
-      const expected = {
-        type: GET_INFOS_DATA_SUCCEEDED,
-        data,
-      };
-
-      expect(getInfosDataSucceeded(data)).toEqual(expected);
     });
   });
 
@@ -108,6 +82,16 @@ describe('<App /> actions', () => {
     });
   });
 
+  describe('unsetHasUserPlugin', () => {
+    it('should return the correct type', () => {
+      const expected = {
+        type: UNSET_HAS_USERS_PLUGIN,
+      };
+
+      expect(unsetHasUserPlugin()).toEqual(expected);
+    });
+  });
+
   describe('updatePlugin', () => {
     it('should return the correct type and the passed data', () => {
       const pluginId = 'content-manager';
@@ -120,7 +104,9 @@ describe('<App /> actions', () => {
         updatedValue,
       };
 
-      expect(updatePlugin(pluginId, updatedKey, updatedValue)).toEqual(expected);
+      expect(updatePlugin(pluginId, updatedKey, updatedValue)).toEqual(
+        expected
+      );
     });
   });
 });

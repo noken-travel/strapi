@@ -1,19 +1,10 @@
 'use strict';
 
 const createEntityService = require('../entity-service');
-const entityValidator = require('../entity-validator');
+const createEntityValidator = require('../entity-validator');
 const { EventEmitter } = require('events');
 
 describe('Entity service', () => {
-  global.strapi = {
-    getModel: jest.fn(() => ({})),
-    config: {
-      get() {
-        return [];
-      },
-    },
-  };
-
   describe('Find', () => {
     test('Returns first element for single types', async () => {
       const data = {
@@ -27,7 +18,7 @@ describe('Entity service', () => {
 
       const fakeDB = {
         getModel: jest.fn(() => {
-          return { kind: 'singleType', privateAttributes: [] };
+          return { kind: 'singleType' };
         }),
         query: jest.fn(() => fakeQuery),
       };
@@ -56,7 +47,7 @@ describe('Entity service', () => {
 
       const fakeDB = {
         getModel: jest.fn(() => {
-          return { kind: 'singleType', privateAttributes: [] };
+          return { kind: 'singleType' };
         }),
         query: jest.fn(() => fakeQuery),
       };
@@ -81,6 +72,14 @@ describe('Entity service', () => {
       let instance;
 
       beforeAll(() => {
+        const strapi = {
+          errors: {
+            badRequest: jest.fn((_, errors) => errors),
+          },
+        };
+
+        const entityValidator = createEntityValidator({ strapi });
+
         const fakeQuery = {
           count: jest.fn(() => 0),
           create: jest.fn(data => data),
@@ -89,8 +88,6 @@ describe('Entity service', () => {
         const fakeModel = {
           kind: 'contentType',
           modelName: 'test-model',
-          privateAttributes: [],
-          options: {},
           attributes: {
             attrStringDefaultRequired: { type: 'string', default: 'default value', required: true },
             attrStringDefault: { type: 'string', default: 'default value' },

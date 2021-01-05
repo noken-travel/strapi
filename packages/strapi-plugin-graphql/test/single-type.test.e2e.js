@@ -58,7 +58,7 @@ describe('Single type Graphql support', () => {
   afterAll(() => modelsUtils.deleteContentType('home-page'), 60000);
 
   describe('Queries', () => {
-    test('No list available', async () => {
+    test('No list avaialble', async () => {
       const res = await graphqlQuery({
         query: /* GraphQL */ `
           {

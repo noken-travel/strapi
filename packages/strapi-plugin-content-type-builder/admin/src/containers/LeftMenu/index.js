@@ -4,12 +4,11 @@
  *
  */
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { sortBy, camelCase, upperFirst } from 'lodash';
 import { useHistory } from 'react-router-dom';
 import { LeftMenuList, useGlobalContext } from 'strapi-helper-plugin';
-import { Text } from '@buffetjs/core';
 import pluginId from '../../pluginId';
 import getTrad from '../../utils/getTrad';
 import CustomLink from '../../components/CustomLink';
@@ -20,10 +19,7 @@ import Wrapper from './Wrapper';
 /* eslint-disable indent */
 
 const displayNotificationCTNotSaved = () => {
-  strapi.notification.toggle({
-    type: 'info',
-    message: { id: `${pluginId}.notification.info.creating.notSaved` },
-  });
+  strapi.notification.info(`${pluginId}.notification.info.creating.notSaved`);
 };
 
 function LeftMenu({ wait }) {
@@ -110,36 +106,6 @@ function LeftMenu({ wait }) {
       displayNotificationCTNotSaved();
     }
   };
-
-  const displayedContentTypes = useMemo(() => {
-    return sortedContentTypesList
-      .filter(obj => obj.editable)
-      .map(obj => {
-        if (obj.plugin) {
-          return {
-            ...obj,
-            CustomComponent: () => (
-              <p style={{ justifyContent: 'normal' }}>
-                {obj.title}&nbsp;
-                <Text
-                  as="span"
-                  ellipsis
-                  // This is needed here
-                  style={{ fontStyle: 'italic' }}
-                  fontWeight="inherit"
-                  lineHeight="inherit"
-                >
-                  ({formatMessage({ id: getTrad('from') })}: {obj.plugin})&nbsp;
-                </Text>
-              </p>
-            ),
-          };
-        }
-
-        return obj;
-      });
-  }, [sortedContentTypesList, formatMessage]);
-
   const data = [
     {
       name: 'models',
@@ -158,7 +124,7 @@ function LeftMenu({ wait }) {
             },
           }
         : null,
-      links: displayedContentTypes.filter(contentType => contentType.kind === 'collectionType'),
+      links: sortedContentTypesList.filter(contentType => contentType.kind === 'collectionType'),
     },
     {
       name: 'singleTypes',
@@ -177,7 +143,7 @@ function LeftMenu({ wait }) {
             },
           }
         : null,
-      links: displayedContentTypes.filter(singleType => singleType.kind === 'singleType'),
+      links: sortedContentTypesList.filter(singleType => singleType.kind === 'singleType'),
     },
     {
       name: 'components',

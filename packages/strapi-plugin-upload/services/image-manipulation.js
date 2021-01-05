@@ -59,17 +59,15 @@ const generateThumbnail = async file => {
 };
 
 const optimize = async buffer => {
-  const {
-    sizeOptimization = false,
-    autoOrientation = false,
-  } = await strapi.plugins.upload.services.upload.getSettings();
+  const { sizeOptimization = false } = await strapi.plugins.upload.services.upload.getSettings();
 
-  if (!sizeOptimization || !(await canBeProccessed(buffer))) {
+  if (!sizeOptimization) return { buffer };
+
+  if (!(await canBeProccessed(buffer))) {
     return { buffer };
   }
 
-  const sharpInstance = autoOrientation ? sharp(buffer).rotate() : sharp(buffer);
-  return sharpInstance
+  return sharp(buffer)
     .toBuffer({ resolveWithObject: true })
     .then(({ data, info }) => ({
       buffer: data,

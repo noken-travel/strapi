@@ -1,45 +1,20 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { get } from 'lodash';
-import { Dropdown, DropdownToggle, DropdownMenu } from 'reactstrap';
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 
 import useDataManager from '../../hooks/useDataManager';
-import Item from './Item';
 import Wrapper from './Wrapper';
 
 const RelationTargetPicker = ({ onChange, oneThatIsCreatingARelationWithAnother, target }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { contentTypes, sortedContentTypesList } = useDataManager();
-  const allowedContentTypesForRelation = useMemo(
-    () =>
-      sortedContentTypesList
-        .filter(obj => obj.kind === 'collectionType')
-        .filter(
-          obj =>
-            obj.restrictRelationsTo === null ||
-            (Array.isArray(obj.restrictRelationsTo) && obj.restrictRelationsTo.length > 0)
-        ),
-    [sortedContentTypesList]
+  const allowedContentTypesForRelation = sortedContentTypesList.filter(
+    obj => obj.kind === 'collectionType'
   );
 
-  const pluginInfo = useMemo(() => {
-    const plugin = get(contentTypes, [target, 'plugin'], null);
-
-    if (plugin) {
-      return (
-        <span style={{ fontStyle: 'italic', textTransform: 'none' }}>&nbsp; (from: {plugin})</span>
-      );
-    }
-
-    return null;
-  }, [contentTypes, target]);
-
-  const targetFriendlyName = useMemo(() => {
-    const name = get(contentTypes, [target, 'schema', 'name'], 'error');
-
-    return name;
-  }, [contentTypes, target]);
+  const targetFriendlyName = get(contentTypes, [target, 'schema', 'name'], 'error');
 
   return (
     <Wrapper>
@@ -56,21 +31,34 @@ const RelationTargetPicker = ({ onChange, oneThatIsCreatingARelationWithAnother,
               style={{ fontSize: 12, marginTop: '-3px' }}
             />
             {targetFriendlyName}
-            {pluginInfo}
           </p>
         </DropdownToggle>
         <DropdownMenu style={{ paddingTop: '3px' }}>
-          {allowedContentTypesForRelation.map(({ uid, title, restrictRelationsTo, plugin }) => {
+          {allowedContentTypesForRelation.map(({ uid, title }) => {
             return (
-              <Item
+              <DropdownItem
                 key={uid}
-                uid={uid}
-                title={title}
-                restrictRelationsTo={restrictRelationsTo}
-                plugin={plugin}
-                onChange={onChange}
-                oneThatIsCreatingARelationWithAnother={oneThatIsCreatingARelationWithAnother}
-              />
+                onClick={() => {
+                  // Change the target
+                  onChange({
+                    target: {
+                      name: 'target',
+                      value: uid,
+                      type: 'relation',
+                      oneThatIsCreatingARelationWithAnother,
+                      selectedContentTypeFriendlyName: title,
+                    },
+                  });
+                }}
+              >
+                <p>
+                  <FontAwesomeIcon
+                    icon={['far', 'caret-square-right']}
+                    style={{ fontSize: 12, marginTop: '-3px' }}
+                  />
+                  {title}
+                </p>
+              </DropdownItem>
             );
           })}
         </DropdownMenu>

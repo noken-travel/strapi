@@ -1,13 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
-const {
-  sanitizeEntity,
-  webhook: webhookUtils,
-  contentTypes: contentTypesUtils,
-} = require('strapi-utils');
 const uploadFiles = require('./utils/upload-files');
-const { ENTRY_CREATE, ENTRY_UPDATE, ENTRY_DELETE } = webhookUtils.webhookEvents;
 
 module.exports = ({ db, eventHub, entityValidator }) => ({
   /**
@@ -22,9 +16,9 @@ module.exports = ({ db, eventHub, entityValidator }) => ({
   async find({ params, populate }, { model }) {
     const { kind } = db.getModel(model);
 
-    // return first element and ignore filters
+    // return first element and ingore filters
     if (kind === 'singleType') {
-      const results = await db.query(model).find({ _limit: 1, ...params }, populate);
+      const results = await db.query(model).find({ _limit: 1 }, populate);
       return _.first(results) || null;
     }
 
@@ -58,9 +52,9 @@ module.exports = ({ db, eventHub, entityValidator }) => ({
    */
 
   async create({ data, files }, { model }) {
-    const modelDef = db.getModel(model);
+    const { kind } = db.getModel(model);
 
-    if (modelDef.kind === 'singleType') {
+    if (kind === 'singleType') {
       // check if there is already one entry and throw
       const count = await db.query(model).count();
       if (count >= 1) {
@@ -68,9 +62,7 @@ module.exports = ({ db, eventHub, entityValidator }) => ({
       }
     }
 
-    const isDraft = contentTypesUtils.isDraft(data, modelDef);
-
-    const validData = await entityValidator.validateEntityCreation(modelDef, data, { isDraft });
+    const validData = await entityValidator.validateEntity(db.getModel(model), data);
 
     let entry = await db.query(model).create(validData);
 
@@ -79,9 +71,9 @@ module.exports = ({ db, eventHub, entityValidator }) => ({
       entry = await this.findOne({ params: { id: entry.id } }, { model });
     }
 
-    eventHub.emit(ENTRY_CREATE, {
-      model: modelDef.modelName,
-      entry: sanitizeEntity(entry, { model: modelDef }),
+    eventHub.emit('entry.create', {
+      model: db.getModel(model).modelName,
+      entry,
     });
 
     return entry;
@@ -94,14 +86,7 @@ module.exports = ({ db, eventHub, entityValidator }) => ({
    */
 
   async update({ params, data, files }, { model }) {
-    const modelDef = db.getModel(model);
-    const existingEntry = await db.query(model).findOne(params);
-
-    const isDraft = contentTypesUtils.isDraft(existingEntry, modelDef);
-
-    const validData = await entityValidator.validateEntityUpdate(modelDef, data, {
-      isDraft,
-    });
+    const validData = await entityValidator.validateEntityUpdate(db.getModel(model), data);
 
     let entry = await db.query(model).update(params, validData);
 
@@ -110,9 +95,9 @@ module.exports = ({ db, eventHub, entityValidator }) => ({
       entry = await this.findOne({ params: { id: entry.id } }, { model });
     }
 
-    eventHub.emit(ENTRY_UPDATE, {
-      model: modelDef.modelName,
-      entry: sanitizeEntity(entry, { model: modelDef }),
+    eventHub.emit('entry.update', {
+      model: db.getModel(model).modelName,
+      entry,
     });
 
     return entry;
@@ -127,10 +112,9 @@ module.exports = ({ db, eventHub, entityValidator }) => ({
   async delete({ params }, { model }) {
     const entry = await db.query(model).delete(params);
 
-    const modelDef = db.getModel(model);
-    eventHub.emit(ENTRY_DELETE, {
-      model: modelDef.modelName,
-      entry: sanitizeEntity(entry, { model: modelDef }),
+    eventHub.emit('entry.delete', {
+      model: db.getModel(model).modelName,
+      entry,
     });
 
     return entry;

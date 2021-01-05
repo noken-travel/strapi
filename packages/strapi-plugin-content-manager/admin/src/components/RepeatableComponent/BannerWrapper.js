@@ -8,10 +8,10 @@ const BannerWrapper = styled.button`
   width: 100%;
   padding: 0 15px;
   border: 1px solid
-    ${({ hasErrors, isOpen, isReadOnly }) => {
+    ${({ hasErrors, isOpen }) => {
       if (hasErrors) {
         return '#FFA784';
-      } else if (isOpen && !isReadOnly) {
+      } else if (isOpen) {
         return '#AED4FB';
       } else {
         return 'rgba(227, 233, 243, 0.75)';
@@ -50,11 +50,7 @@ const BannerWrapper = styled.button`
   font-weight: 500;
   cursor: pointer;
 
-  background-color: ${({ hasErrors, isOpen, isReadOnly }) => {
-    if (isReadOnly) {
-      return '#fafafb';
-    }
-
+  background-color: ${({ hasErrors, isOpen }) => {
     if (hasErrors && isOpen) {
       return '#FFE9E0';
     } else if (isOpen) {
@@ -64,21 +60,13 @@ const BannerWrapper = styled.button`
     }
   }};
 
-  ${({ hasErrors, isOpen, isReadOnly }) => {
+  ${({ hasErrors, isOpen }) => {
     if (hasErrors) {
       return `
         color: #f64d0a;
         font-weight: 600;
       `;
     }
-
-    if (isReadOnly) {
-      return `
-        color: #9EA7B8;
-        font-weight: 600;
-      `;
-    }
-
     if (isOpen) {
       return `
         color: #007eff;
@@ -111,10 +99,10 @@ const BannerWrapper = styled.button`
     height: 19px;
     margin-right: 19px;
     border-radius: 50%;
-    background-color: ${({ hasErrors, isOpen, isReadOnly }) => {
+    background-color: ${({ hasErrors, isOpen }) => {
       if (hasErrors) {
         return '#FAA684';
-      } else if (isOpen && !isReadOnly) {
+      } else if (isOpen) {
         return '#AED4FB';
       } else {
         return '#F3F4F4';
@@ -149,11 +137,11 @@ const BannerWrapper = styled.button`
     }
   }
 
-  ${({ hasErrors, isOpen, isReadOnly }) => {
+  ${({ hasErrors, isOpen }) => {
     let fill = '#ABB3C2';
     let trashFill = '#4B515A';
 
-    if (isOpen && !isReadOnly) {
+    if (isOpen) {
       fill = '#007EFF';
       trashFill = '#007EFF';
     }
@@ -186,9 +174,5 @@ const BannerWrapper = styled.button`
     margin-top: -2px;
   }
 `;
-
-BannerWrapper.defaultProps = {
-  isReadOnly: false,
-};
 
 export default BannerWrapper;

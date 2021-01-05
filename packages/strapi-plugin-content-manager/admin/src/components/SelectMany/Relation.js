@@ -1,71 +1,30 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import React, { memo, useMemo } from 'react';
+import React, { memo } from 'react';
 import PropTypes from 'prop-types';
-import { Link, useLocation } from 'react-router-dom';
-import { isEmpty } from 'lodash';
-import { useIntl } from 'react-intl';
-import { getTrad } from '../../utils';
+import { Link } from 'react-router-dom';
+import { FormattedMessage } from 'react-intl';
+import pluginId from '../../pluginId';
 import IconRemove from '../../assets/images/icon_remove.svg';
-import RelationDPState from '../RelationDPState';
 import { Span } from './components';
 
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 
-const Relation = ({
-  data,
-  displayNavigationLink,
-  hasDraftAndPublish,
-  isDisabled,
-  isDragging,
-  mainField,
-  onRemove,
-  to,
-}) => {
-  const { formatMessage } = useIntl();
-  const cursor = useMemo(() => {
-    if (isDisabled) {
-      return 'not-allowed';
-    }
-
-    if (!displayNavigationLink) {
-      return 'default';
-    }
-
-    return 'pointer';
-  }, [displayNavigationLink, isDisabled]);
-  const { pathname } = useLocation();
-  const isDraft = isEmpty(data.published_at);
-  const titleLabelID = isDraft
-    ? 'components.Select.draft-info-title'
-    : 'components.Select.publish-info-title';
-  let title = hasDraftAndPublish
-    ? formatMessage({ id: getTrad(titleLabelID) })
-    : formatMessage({ id: getTrad('containers.Edit.clickToJump') });
-
-  if (isDragging || !displayNavigationLink) {
-    title = '';
-  }
-
+const Relation = ({ data, mainField, onRemove, to }) => {
   return (
     <>
-      <div style={{ cursor }} title={title}>
+      <div style={{ cursor: 'pointer' }}>
         <div className="dragHandle">
           <span />
         </div>
-        {hasDraftAndPublish && (
-          <div>
-            <RelationDPState isDraft={isDraft} />
-          </div>
-        )}
-        {displayNavigationLink ? (
-          <Link to={{ pathname: to, state: { from: pathname } }} title={title}>
-            <Span>{data[mainField]}&nbsp;</Span>
-          </Link>
-        ) : (
-          <Span>{data[mainField]}&nbsp;</Span>
-        )}
+        <FormattedMessage id={`${pluginId}.containers.Edit.clickToJump`}>
+          {title => (
+            <Link to={to} title={title}>
+              <Span>{data[mainField]}</Span>
+            </Link>
+          )}
+        </FormattedMessage>
       </div>
-      <div style={{ cursor }}>
+      <div style={{ cursor: 'pointer' }}>
         <img src={IconRemove} alt="Remove Icon" onClick={onRemove} />
       </div>
     </>
@@ -73,17 +32,12 @@ const Relation = ({
 };
 
 Relation.defaultProps = {
-  isDragging: false,
   onRemove: () => {},
   to: '',
 };
 
 Relation.propTypes = {
   data: PropTypes.object.isRequired,
-  displayNavigationLink: PropTypes.bool.isRequired,
-  hasDraftAndPublish: PropTypes.bool.isRequired,
-  isDisabled: PropTypes.bool.isRequired,
-  isDragging: PropTypes.bool,
   mainField: PropTypes.string.isRequired,
   onRemove: PropTypes.func,
   to: PropTypes.string,

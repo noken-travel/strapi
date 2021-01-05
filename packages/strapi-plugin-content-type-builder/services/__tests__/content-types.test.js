@@ -13,9 +13,6 @@ describe('Content types service', () => {
         name: 'My name',
         description: 'My description',
       },
-      options: {
-        draftAndPublish: false,
-      },
       attributes: {
         title: {
           type: 'string',

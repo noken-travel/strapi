@@ -7,7 +7,7 @@ Controllers are JavaScript files which contain a set of methods called **actions
 ```js
 module.exports = {
   // GET /hello
-  async index(ctx) {
+  index: async ctx => {
     return 'Hello World!';
   },
 };
@@ -42,8 +42,6 @@ const { parseMultipartData, sanitizeEntity } = require('strapi-utils');
 
 - `parseMultipartData`: This function parses Strapi's formData format.
 - `sanitizeEntity`: This function removes all private fields from the model and its relations.
-
-#### Collection Type
 
 :::: tabs
 
@@ -196,7 +194,7 @@ const { sanitizeEntity } = require('strapi-utils');
 
 module.exports = {
   /**
-   * Delete a record.
+   * delete a record.
    *
    * @return {Object}
    */
@@ -205,90 +203,6 @@ module.exports = {
     const { id } = ctx.params;
 
     const entity = await strapi.services.restaurant.delete({ id });
-    return sanitizeEntity(entity, { model: strapi.models.restaurant });
-  },
-};
-```
-
-:::
-
-::::
-
-#### Single Type
-
-:::: tabs
-
-::: tab find
-
-#### `find`
-
-```js
-const { sanitizeEntity } = require('strapi-utils');
-
-module.exports = {
-  /**
-   * Retrieve the record.
-   *
-   * @return {Object}
-   */
-
-  async find(ctx) {
-    const entity = await strapi.services.restaurant.find();
-    return sanitizeEntity(entity, { model: strapi.models.restaurant });
-  },
-};
-```
-
-:::
-
-::: tab update
-
-#### `update`
-
-```js
-const { parseMultipartData, sanitizeEntity } = require('strapi-utils');
-
-module.exports = {
-  /**
-   * Update the record.
-   *
-   * @return {Object}
-   */
-
-  async update(ctx) {
-    let entity;
-    if (ctx.is('multipart')) {
-      const { data, files } = parseMultipartData(ctx);
-      entity = await strapi.services.restaurant.createOrUpdate(data, {
-        files,
-      });
-    } else {
-      entity = await strapi.services.restaurant.createOrUpdate(ctx.request.body);
-    }
-
-    return sanitizeEntity(entity, { model: strapi.models.restaurant });
-  },
-};
-```
-
-:::
-
-::: tab delete
-
-#### `delete`
-
-```js
-const { sanitizeEntity } = require('strapi-utils');
-
-module.exports = {
-  /**
-   * Delete the record.
-   *
-   * @return {Object}
-   */
-
-  async delete(ctx) {
-    const entity = await strapi.services.restaurant.delete();
     return sanitizeEntity(entity, { model: strapi.models.restaurant });
   },
 };
@@ -316,7 +230,7 @@ Every action receives a `context` (`ctx`) object as first parameter containing t
 
 ### Example
 
-In this example, we are defining a specific route in `./api/hello/config/routes.json` that takes `Hello.index` as handler. For more information on routing, please see the [Routing documentation](./routing.md)
+In this example, we are defining a specific route in `./api/hello/config/routes.json` that takes `Hello.index` as handler.
 
 It means that every time a request `GET /hello` is sent to the server, Strapi will call the `index` action in the `Hello.js` controller.
 Our `index` action will return `Hello World!`. You can also return a JSON object.
@@ -329,10 +243,7 @@ Our `index` action will return `Hello World!`. You can also return a JSON object
     {
       "method": "GET",
       "path": "/hello",
-      "handler": "Hello.index",
-      "config": {
-        "policies": []
-      }
+      "handler": "Hello.index"
     }
   ]
 }
@@ -343,7 +254,7 @@ Our `index` action will return `Hello World!`. You can also return a JSON object
 ```js
 module.exports = {
   // GET /hello
-  async index(ctx) {
+  index: async ctx => {
     ctx.send('Hello World!');
   },
 };

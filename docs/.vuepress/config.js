@@ -1,5 +1,5 @@
 module.exports = {
-  title: null,
+  title: 'Strapi Documentation',
   description: 'The headless CMS developers love.',
   base: '/documentation/',
   plugins: [
@@ -17,7 +17,7 @@ module.exports = {
       'link',
       {
         rel: 'icon',
-        href: 'https://strapi.io/assets/favicon-32x32.png',
+        href: 'https://strapi.io/favicon.ico',
       },
     ],
 
@@ -53,7 +53,7 @@ module.exports = {
       'meta',
       {
         property: 'og:image',
-        content: 'https://strapi.io/documentation/assets/meta.png',
+        content: 'https://strapi.io/assets/images/strapi-website-preview.png',
       },
     ],
     [
@@ -108,7 +108,6 @@ module.exports = {
     ],
   ],
   themeConfig: {
-    logo: '/assets/logo.png',
     nav: [
       {
         text: 'Versions',
@@ -128,16 +127,12 @@ module.exports = {
         link: 'https://strapi.io',
       },
       {
-        text: 'Forum',
-        link: 'https://forum.strapi.io',
-      },
-      {
         text: 'Slack',
         link: 'https://slack.strapi.io',
       },
       {
         text: 'Blog',
-        link: 'https://strapi.io/blog',
+        link: 'https://blog.strapi.io',
       },
       {
         text: 'Tutorials',
@@ -146,7 +141,6 @@ module.exports = {
     ],
     repo: 'strapi/strapi',
     docsDir: 'docs',
-    docsBranch: 'documentation',
     algolia: {
       apiKey: 'a93451de224096fb34471c8b8b049de7',
       indexName: 'strapi',
@@ -166,18 +160,14 @@ module.exports = {
             ['/v3.x/getting-started/deployment', 'Deployment'],
             ['/v3.x/getting-started/contributing', 'Contributing'],
             ['/v3.x/getting-started/troubleshooting', 'Troubleshooting'],
-            ['/v3.x/getting-started/usage-information', 'Telemetry'],
             '/v3.x/getting-started/quick-start',
+            '/v3.x/getting-started/quick-start-tutorial',
           ],
         },
         {
           collapsable: true,
           title: '📄 Content API',
-          children: [
-            ['/v3.x/content-api/api-endpoints', 'API Endpoints'],
-            ['/v3.x/content-api/parameters', 'Parameters'],
-            ['/v3.x/content-api/integrations', 'Integrations'],
-          ],
+          children: ['/v3.x/content-api/api-endpoints', '/v3.x/content-api/parameters'],
         },
         {
           collapsable: true,
@@ -186,7 +176,6 @@ module.exports = {
             '/v3.x/concepts/configurations',
             '/v3.x/concepts/controllers',
             '/v3.x/concepts/customization',
-            '/v3.x/concepts/draft-and-publish',
             '/v3.x/concepts/file-structure',
             '/v3.x/concepts/hooks',
             '/v3.x/concepts/middlewares',
@@ -198,7 +187,6 @@ module.exports = {
             '/v3.x/concepts/requests-responses',
             '/v3.x/concepts/routing',
             '/v3.x/concepts/services',
-            '/v3.x/concepts/templates',
             '/v3.x/concepts/webhooks',
           ],
         },
@@ -235,7 +223,6 @@ module.exports = {
             '/v3.x/admin-panel/customization',
             '/v3.x/admin-panel/custom-webpack-config',
             '/v3.x/admin-panel/deploy',
-            '/v3.x/admin-panel/forgot-password',
           ],
         },
         {
@@ -269,7 +256,7 @@ module.exports = {
         {
           collapsable: true,
           title: '🏗 Global strapi',
-          children: ['/v3.x/global-strapi/api-reference'],
+          children: ['/v3.x/global-strapi/api-reference', '/v3.x/global-strapi/usage-information'],
         },
         {
           collapsable: false,

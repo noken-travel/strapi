@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 const Ul = styled.ul`
-  max-height: ${props => props.maxHeight};
+  max-height: 150px;
   padding: 0 15px;
   background-color: #fff;
   list-style: none;
@@ -58,9 +58,5 @@ const Ul = styled.ul`
     }
   }
 `;
-
-Ul.defaultProps = {
-  maxHeight: '150px',
-};
 
 export default Ul;

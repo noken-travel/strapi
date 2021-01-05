@@ -27,7 +27,9 @@ describe('Test type password', () => {
     });
 
     expect(res.statusCode).toBe(200);
-    expect(res.body.field).toBeUndefined();
+    expect(res.body).toMatchObject({
+      field: 'somePassword',
+    });
   });
 
   test.todo('Should be private by default');
@@ -40,7 +42,9 @@ describe('Test type password', () => {
     });
 
     expect(res.statusCode).toBe(200);
-    expect(res.body.field).toBeUndefined();
+    expect(res.body).toMatchObject({
+      field: '1234567',
+    });
   });
 
   test('Reading entry returns correct value', async () => {
@@ -48,10 +52,13 @@ describe('Test type password', () => {
 
     expect(res.statusCode).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
-
-    res.body.forEach(element => {
-      expect(element.field).toBeUndefined();
-    });
+    expect(res.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: expect.any(String),
+        }),
+      ])
+    );
   });
 
   test('Updating entry sets the right value and format', async () => {
@@ -73,7 +80,7 @@ describe('Test type password', () => {
     expect(updateRes.statusCode).toBe(200);
     expect(updateRes.body).toMatchObject({
       id: res.body.id,
+      field: 'otherPwd',
     });
-    expect(res.body.field).toBeUndefined();
   });
 });

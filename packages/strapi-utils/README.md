@@ -10,7 +10,7 @@ Shared utilities between Strapi packages.
 
 ## Resources
 
-- [License](LICENSE)
+- [MIT License](LICENSE.md)
 
 ## Links
 

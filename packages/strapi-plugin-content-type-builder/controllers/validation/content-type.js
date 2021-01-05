@@ -8,7 +8,7 @@ const pluralize = require('pluralize');
 const createSchema = require('./model-schema');
 const { removeEmptyDefaults, removeDeletedUIDTargetFields } = require('./data-transform');
 const { nestedComponentSchema } = require('./component');
-const { modelTypes, DEFAULT_TYPES, typeKinds } = require('../../services/constants');
+const { modelTypes, DEFAULT_TYPES, typeKinds } = require('./constants');
 
 /**
  * Allowed relation per type kind

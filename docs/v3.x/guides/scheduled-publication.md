@@ -4,7 +4,9 @@ This guide will explain how to create an article schedule system.
 
 ## Introduction
 
-What we want here is to be able to set a publication date for an article, and at this date, switch the `draft` state to `published`.
+This guide will use this [draft system](./draft.md) guide. You should review it first to understand the draft/published status and the **Article** API that we will use in this guide.
+
+What we want here is to be able to set a publication date for an article, and at this date, switch the `draft` status to `published`.
 
 ## Example
 
@@ -15,16 +17,16 @@ For this example, we will have to add a `publish_at` attribute to the **Article*
 - Add another field
   - `date` attribute named `publish_at` with `datetime` type
 
-And add some data with different dates and state to be able to see the publication happen.
-Make sure to create some entries with a draft state and a `publish_at` that is before the current date.
+And add some data with different dates and status to be able to see the publication happen.
+Make sure to create some entries with a draft `status` and a `published_at` that is before the current date.
 
-The goal will be to check every minute if there are draft articles that have a `publish_at` lower that the current date.
+The goal will be to check every minute if there is `draft` articles that have a `publish_at` lower that the current date.
 
 ## Create a CRON task
 
 To execute a function every minutes, we will use a CRON task.
 
-Here is the [full documentation](../concepts/configurations.md#cron-tasks) of this feature. If your CRON task requires to run based on a specific timezone then do look into the full documentation.
+Here is the [full documentation](../concepts/configurations.md#cron-tasks) of this feature.
 
 **Path —** `./config/functions/cron.js`
 
@@ -44,9 +46,9 @@ Please note that Strapi's built in CRON feature will not work if you plan to use
 
 ## Business logic
 
-Now we can start writing the publishing logic. The code that will fetch all `draft` **Articles** with a `publish_at` that is before the current date.
+Now we can start writing the publishing logic. The code that will fetch all `draft` **Articles** with a `published_at` that is before the current date.
 
-Then we will update the `published_at` of all these articles.
+Then we will update the `status` of all these articles to `published`.
 
 **Path —** `./config/functions/cron.js`
 
@@ -55,16 +57,13 @@ module.exports = {
   '*/1 * * * *': async () => {
     // fetch articles to publish
     const draftArticleToPublish = await strapi.api.article.services.article.find({
-      _publicationState: 'preview',
+      status: 'draft',
       publish_at_lt: new Date(),
     });
 
-    // update published_at of articles
+    // update status of articles
     draftArticleToPublish.forEach(async article => {
-      await strapi.api.article.services.article.update(
-        { id: article.id },
-        { published_at: new Date() }
-      );
+      await strapi.api.article.services.article.update({ id: article.id }, { status: 'published' });
     });
   },
 };

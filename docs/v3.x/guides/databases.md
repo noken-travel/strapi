@@ -41,13 +41,6 @@ This will create a new project and launch it in the browser.
 The [Quick Start Guide](../getting-started/quick-start.md) is a complete step-by-step tutorial
 :::
 
-## Other SQL Databases (PostgreSQL, MySQL)
-Refer to the [configuration section](../concepts/configurations.md#database) for all supported options to setup Strapi with your SQL database.
-
-::: tip
-Most cloud service providers offer a managed SQL database service, which is a hassle-free way to get your database up and running. To get up and running locally, you might want to try using a Docker container.
-:::
-
 ## MongoDB Installation
 
 ### Install MongoDB locally
@@ -318,7 +311,7 @@ Please note the `<password>` after your `username`. In this example, after `mong
 
 #### 5. Update and replace your existing `/database.js` config file for the appropriate environment (development | production).
 
-Replace the contents of `/database.js` with the following and replace **< password >** with the password of the user of your database you created earlier:
+Replace the contents of `/database.json` with the following and replace **< password >** with the password of the user of your database you created earlier:
 
 `Path: ./config/database.js`.
 
@@ -346,9 +339,9 @@ DATABASE_URI=mongodb://paulbocuse:<password>@strapidatabase-shard-00-00-fxxx6c.m
 ```
 
 ::: warning NOTE
-The above configuration will create a database called `strapi`, the _default database_ Strapi sets for any **MongoDB** database. If you would like to name your database something else, add the following **key:value pair** into your **settings:** located in your `database.js` file.
+The above configuration will create a database called `strapi`, the _default database_ Strapi sets for any **MongoDB** database. If you would like to name your database something else, add the following **key:value pair** into your **"settings":** located in your `database.json` file.
 
-`database: 'my-database-name'`
+`"database": "my-database-name"`
 
 :::
 

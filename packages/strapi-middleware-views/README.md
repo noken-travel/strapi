@@ -10,7 +10,7 @@ Views middleware to enable server-side rendering for the Strapi framework. It wi
 
 ## Resources
 
-- [License](LICENSE)
+- [MIT License](LICENSE.md)
 
 ## Links
 

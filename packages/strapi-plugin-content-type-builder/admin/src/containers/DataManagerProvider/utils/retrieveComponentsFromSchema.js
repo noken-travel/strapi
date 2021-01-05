@@ -37,7 +37,7 @@ const retrieveComponentsFromSchema = (attributes, allComponentsData) => {
 
           return [
             ...acc2,
-            ...retrieveComponentsFromSchema(compoAttrs, allComponentsData),
+            ...retrieveComponentsFromSchema(compoAttrs, allComponents),
           ];
         },
         []

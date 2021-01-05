@@ -46,7 +46,7 @@ This will render the `views/home.ejs` file and you will have access to `<%= titl
 
 ## Resources
 
-- [License](LICENSE)
+- [MIT License](LICENSE.md)
 
 ## Links
 

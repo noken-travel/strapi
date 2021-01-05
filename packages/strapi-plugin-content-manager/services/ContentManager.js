@@ -1,18 +1,12 @@
 'use strict';
 
 const _ = require('lodash');
-const {
-  contentTypes: contentTypesUtils,
-  sanitizeEntity,
-  webhook: webhookUtils,
-} = require('strapi-utils');
-const { PUBLISHED_AT_ATTRIBUTE } = contentTypesUtils.constants;
-const { ENTRY_PUBLISH, ENTRY_UNPUBLISH } = webhookUtils.webhookEvents;
+
 /**
  * A set of functions called "actions" for `ContentManager`
  */
 module.exports = {
-  fetchAll(model, query) {
+  fetchAll(params, query) {
     const { query: request, populate, ...filters } = query;
 
     const queryFilter = !_.isEmpty(request)
@@ -23,100 +17,64 @@ module.exports = {
       : filters;
 
     return strapi.entityService.find(
-      {
-        params: queryFilter,
-        populate,
-      },
-      { model }
+      { params: queryFilter, populate },
+      { model: params.model }
     );
   },
 
-  fetch(model, id, config = {}) {
-    const { query = {}, populate } = config;
+  fetch(params, populate) {
+    const { id, model } = params;
 
     return strapi.entityService.findOne(
       {
-        params: { ...query, id },
+        params: {
+          id,
+        },
         populate,
       },
       { model }
     );
   },
 
-  count(model, query) {
-    return strapi.entityService.count({ params: query }, { model });
+  count(params, query) {
+    const { model } = params;
+    const { ...filters } = query;
+
+    return strapi.entityService.count({ params: filters }, { model });
   },
 
-  create({ data, files }, { model } = {}) {
-    const modelDef = strapi.getModel(model);
-    const publishData = { ...data };
-    if (contentTypesUtils.hasDraftAndPublish(modelDef)) {
-      publishData[PUBLISHED_AT_ATTRIBUTE] = null;
-    }
-
-    return strapi.entityService.create({ data: publishData, files }, { model });
+  create(data, { files, model } = {}) {
+    return strapi.entityService.create({ data, files }, { model });
   },
 
-  edit(params, { data, files }, { model } = {}) {
-    const publishData = _.omit(data, PUBLISHED_AT_ATTRIBUTE);
-    return strapi.entityService.update({ params, data: publishData, files }, { model });
+  edit(params, data, { model, files } = {}) {
+    return strapi.entityService.update({ params, data, files }, { model });
   },
 
-  delete(model, query) {
-    return strapi.entityService.delete({ params: query }, { model });
+  delete(params) {
+    const { id, model } = params;
+    return strapi.entityService.delete({ params: { id } }, { model });
   },
 
-  deleteMany(model, ids, query) {
+  deleteMany(params, query) {
+    const { model } = params;
+
     const { primaryKey } = strapi.query(model);
+    const filter = { [`${primaryKey}_in`]: Object.values(query), _limit: 100 };
 
-    return strapi.entityService.delete(
-      {
-        params: {
-          _limit: 100,
-          ...query,
-          _where: _.concat({ [`${primaryKey}_in`]: ids }, query._where || {}),
-        },
-      },
-      { model }
-    );
+    return strapi.entityService.delete({ params: filter }, { model });
   },
 
-  search(model, query, params) {
-    return strapi.entityService.search({ params: { ...query, ...params } }, { model });
+  search(params, query) {
+    const { model } = params;
+
+    return strapi.entityService.search({ params: query }, { model });
   },
 
-  countSearch(model, query) {
-    return strapi.entityService.countSearch({ params: query }, { model });
-  },
+  countSearch(params, query) {
+    const { model } = params;
+    const { _q } = query;
 
-  async publish(params, model) {
-    const modelDef = strapi.getModel(model);
-
-    const publishedEntry = await strapi.entityService.update(
-      { params, data: { [PUBLISHED_AT_ATTRIBUTE]: new Date() } },
-      { model }
-    );
-
-    strapi.eventHub.emit(ENTRY_PUBLISH, {
-      model: modelDef.modelName,
-      entry: sanitizeEntity(publishedEntry, { model: modelDef }),
-    });
-
-    return publishedEntry;
-  },
-
-  async unpublish(params, model) {
-    const modelDef = strapi.getModel(model);
-
-    const unpublishedEntry = await strapi.entityService.update(
-      { params, data: { [PUBLISHED_AT_ATTRIBUTE]: null } },
-      { model }
-    );
-    strapi.eventHub.emit(ENTRY_UNPUBLISH, {
-      model: modelDef.modelName,
-      entry: sanitizeEntity(unpublishedEntry, { model: modelDef }),
-    });
-
-    return unpublishedEntry;
+    return strapi.entityService.countSearch({ params: { _q } }, { model });
   },
 };

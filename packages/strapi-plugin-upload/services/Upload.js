@@ -11,20 +11,11 @@ const path = require('path');
 const crypto = require('crypto');
 const _ = require('lodash');
 const util = require('util');
-const {
-  nameToSlug,
-  contentTypes: contentTypesUtils,
-  sanitizeEntity,
-  webhook: webhookUtils,
-} = require('strapi-utils');
-const { MEDIA_UPDATE, MEDIA_CREATE, MEDIA_DELETE } = webhookUtils.webhookEvents;
+const { nameToSlug } = require('strapi-utils');
 
 const { bytesToKbytes } = require('../utils/file');
 
-const { UPDATED_BY_ATTRIBUTE, CREATED_BY_ATTRIBUTE } = contentTypesUtils.constants;
-
 const randomSuffix = () => crypto.randomBytes(5).toString('hex');
-
 const generateFileName = name => {
   const baseName = nameToSlug(name, { separator: '_', lowercase: false });
 
@@ -87,23 +78,7 @@ module.exports = {
   },
 
   async enhanceFile(file, fileInfo = {}, metas = {}) {
-    let readBuffer;
-    try {
-      readBuffer = await util.promisify(fs.readFile)(file.path);
-    } catch (e) {
-      if (e.code === 'ERR_FS_FILE_TOO_LARGE') {
-        throw strapi.errors.entityTooLarge('FileTooBig', {
-          errors: [
-            {
-              id: 'Upload.status.sizeLimit',
-              message: `${file.name} file is bigger than the limit size!`,
-              values: { file: file.name },
-            },
-          ],
-        });
-      }
-      throw e;
-    }
+    const readBuffer = await util.promisify(fs.readFile)(file.path);
 
     const { optimize } = strapi.plugins.upload.services['image-manipulation'];
 
@@ -124,7 +99,7 @@ module.exports = {
     });
   },
 
-  async upload({ data, files }, { user } = {}) {
+  async upload({ data, files }) {
     const { fileInfo, ...metas } = data;
 
     const fileArray = Array.isArray(files) ? files : [files];
@@ -133,7 +108,7 @@ module.exports = {
     const doUpload = async (file, fileInfo) => {
       const fileData = await this.enhanceFile(file, fileInfo, metas);
 
-      return this.uploadFileAndPersist(fileData, { user });
+      return this.uploadFileAndPersist(fileData);
     };
 
     return await Promise.all(
@@ -141,7 +116,7 @@ module.exports = {
     );
   },
 
-  async uploadFileAndPersist(fileData, { user } = {}) {
+  async uploadFileAndPersist(fileData) {
     const config = strapi.plugins.upload.config;
 
     const {
@@ -183,10 +158,10 @@ module.exports = {
       height,
     });
 
-    return this.add(fileData, { user });
+    return this.add(fileData);
   },
 
-  async updateFileInfo(id, { name, alternativeText, caption }, { user } = {}) {
+  async updateFileInfo(id, { name, alternativeText, caption }) {
     const dbFile = await this.fetch({ id });
 
     if (!dbFile) {
@@ -199,10 +174,10 @@ module.exports = {
       caption: _.isNil(caption) ? dbFile.caption : caption,
     };
 
-    return this.update({ id }, newInfos, { user });
+    return this.update({ id }, newInfos);
   },
 
-  async replace(id, { data, file }, { user } = {}) {
+  async replace(id, { data, file }) {
     const config = strapi.plugins.upload.config;
 
     const {
@@ -274,33 +249,22 @@ module.exports = {
       height,
     });
 
-    return this.update({ id }, fileData, { user });
+    return this.update({ id }, fileData);
   },
 
-  async update(params, values, { user } = {}) {
-    const fileValues = { ...values };
-    if (user) {
-      fileValues[UPDATED_BY_ATTRIBUTE] = user.id;
-    }
-    sendMediaMetrics(fileValues);
+  async update(params, values) {
+    sendMediaMetrics(values);
 
-    const res = await strapi.query('file', 'upload').update(params, fileValues);
-    const modelDef = strapi.getModel('file', 'upload');
-    strapi.eventHub.emit(MEDIA_UPDATE, { media: sanitizeEntity(res, { model: modelDef }) });
+    const res = await strapi.query('file', 'upload').update(params, values);
+    strapi.eventHub.emit('media.update', { media: res });
     return res;
   },
 
-  async add(values, { user } = {}) {
-    const fileValues = { ...values };
-    if (user) {
-      fileValues[UPDATED_BY_ATTRIBUTE] = user.id;
-      fileValues[CREATED_BY_ATTRIBUTE] = user.id;
-    }
-    sendMediaMetrics(fileValues);
+  async add(values) {
+    sendMediaMetrics(values);
 
-    const res = await strapi.query('file', 'upload').create(fileValues);
-    const modelDef = strapi.getModel('file', 'upload');
-    strapi.eventHub.emit(MEDIA_CREATE, { media: sanitizeEntity(res, { model: modelDef }) });
+    const res = await strapi.query('file', 'upload').create(values);
+    strapi.eventHub.emit('media.create', { media: res });
     return res;
   },
 
@@ -346,8 +310,7 @@ module.exports = {
       id: file.id,
     });
 
-    const modelDef = strapi.getModel('file', 'upload');
-    strapi.eventHub.emit(MEDIA_DELETE, { media: sanitizeEntity(media, { model: modelDef }) });
+    strapi.eventHub.emit('media.delete', { media });
 
     return strapi.query('file', 'upload').delete({ id: file.id });
   },

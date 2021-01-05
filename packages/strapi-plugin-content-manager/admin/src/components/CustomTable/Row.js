@@ -1,10 +1,12 @@
 import React, { memo, useCallback } from 'react';
+import { withRouter } from 'react-router';
 import PropTypes from 'prop-types';
 import { get, isEmpty, isNull, isObject, toLower, toString } from 'lodash';
 import moment from 'moment';
 import { useGlobalContext } from 'strapi-helper-plugin';
 import { IconLinks } from '@buffetjs/core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import useListView from '../../hooks/useListView';
 import dateFormats from '../../utils/dateFormats';
 import CustomInputCheckbox from '../CustomInputCheckbox';
@@ -66,7 +68,7 @@ const getDisplayedValue = (type, value, name) => {
   }
 };
 
-function Row({ canDelete, canUpdate, isBulkable, row, headers }) {
+function Row({ goTo, isBulkable, row, headers }) {
   const { entriesToDelete, onChangeBulk, onClickDelete, schema } = useListView();
 
   const memoizedDisplayedValue = useCallback(
@@ -78,21 +80,18 @@ function Row({ canDelete, canUpdate, isBulkable, row, headers }) {
     [row, schema]
   );
 
-  const isMedia = useCallback(
-    header => {
-      return get(schema, ['attributes', header.name, 'type']) === 'media';
-    },
-    [schema]
-  );
-
   const { emitEvent } = useGlobalContext();
 
   const links = [
     {
-      icon: canUpdate ? <FontAwesomeIcon icon="pencil-alt" /> : null,
+      icon: <FontAwesomeIcon icon="pencil-alt" />,
+      onClick: () => {
+        emitEvent('willEditEntryFromList');
+        goTo(row.id);
+      },
     },
     {
-      icon: canDelete ? <FontAwesomeIcon icon="trash-alt" /> : null,
+      icon: <FontAwesomeIcon icon="trash-alt" />,
       onClick: e => {
         e.stopPropagation();
         emitEvent('willDeleteEntryFromList');
@@ -104,7 +103,6 @@ function Row({ canDelete, canUpdate, isBulkable, row, headers }) {
   return (
     <>
       {isBulkable && (
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events
         <td key="i" onClick={e => e.stopPropagation()}>
           <CustomInputCheckbox
             name={row.id}
@@ -115,13 +113,13 @@ function Row({ canDelete, canUpdate, isBulkable, row, headers }) {
       )}
       {headers.map(header => {
         return (
-          <td key={header.key || header.name}>
-            {isMedia(header) && <MediaPreviewList files={memoizedDisplayedValue(header.name)} />}
-            {header.cellFormatter && header.cellFormatter(row)}
-            {!isMedia(header) && !header.cellFormatter && (
+          <td key={header.name}>
+            {get(schema, ['attributes', header.name, 'type']) !== 'media' ? (
               <Truncate>
                 <Truncated>{memoizedDisplayedValue(header.name)}</Truncated>
               </Truncate>
+            ) : (
+              <MediaPreviewList files={memoizedDisplayedValue(header.name)} />
             )}
           </td>
         );
@@ -134,11 +132,10 @@ function Row({ canDelete, canUpdate, isBulkable, row, headers }) {
 }
 
 Row.propTypes = {
-  canDelete: PropTypes.bool.isRequired,
-  canUpdate: PropTypes.bool.isRequired,
+  goTo: PropTypes.func.isRequired,
   headers: PropTypes.array.isRequired,
   isBulkable: PropTypes.bool.isRequired,
   row: PropTypes.object.isRequired,
 };
 
-export default memo(Row);
+export default withRouter(memo(Row));

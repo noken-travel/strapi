@@ -44,13 +44,20 @@ class InputJSONWithErrors extends React.Component {
     const handleBlur = isFunction(onBlur) ? onBlur : this.handleBlur;
 
     return (
-      <Error inputError={inputError} name={name} type="text" validations={validations}>
+      <Error
+        inputError={inputError}
+        name={name}
+        type="text"
+        validations={validations}
+      >
         {({ canCheck, onBlur, error, dispatch }) => {
-          const hasError = Boolean(error);
+          const hasError = error && error !== null;
 
           return (
             <Wrapper
-              className={`${cn(!isEmpty(className) && className)} ${hasError ? 'bordered' : ''}`}
+              className={`${cn(!isEmpty(className) && className)} ${
+                hasError ? 'bordered' : ''
+              }`}
             >
               <Label htmlFor={name}>{label}</Label>
               <InputJSON
@@ -80,7 +87,9 @@ class InputJSONWithErrors extends React.Component {
                 tabIndex={tabIndex}
                 value={value}
               />
-              {!hasError && inputDescription && <Description>{inputDescription}</Description>}
+              {!hasError && inputDescription && (
+                <Description>{inputDescription}</Description>
+              )}
               {hasError && <ErrorMessage>{error}</ErrorMessage>}
             </Wrapper>
           );

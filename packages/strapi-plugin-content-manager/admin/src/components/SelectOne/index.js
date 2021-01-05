@@ -1,11 +1,10 @@
 import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 import { get, isNull } from 'lodash';
+
 import Select from 'react-select';
-import SingleValue from './SingleValue';
 
 function SelectOne({
-  components,
   mainField,
   name,
   isDisabled,
@@ -21,7 +20,6 @@ function SelectOne({
 }) {
   return (
     <Select
-      components={{ ...components, SingleValue }}
       id={name}
       isClearable
       isDisabled={isDisabled}
@@ -39,12 +37,10 @@ function SelectOne({
 }
 
 SelectOne.defaultProps = {
-  components: {},
   value: null,
 };
 
 SelectOne.propTypes = {
-  components: PropTypes.object,
   isDisabled: PropTypes.bool.isRequired,
   isLoading: PropTypes.bool.isRequired,
   mainField: PropTypes.string.isRequired,

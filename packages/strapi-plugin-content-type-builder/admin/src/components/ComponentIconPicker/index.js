@@ -14,7 +14,6 @@ import Wrapper from './Wrapper';
 
 const ComponentIconPicker = ({ error, isCreating, label, name, onChange, value }) => {
   const { allIcons, allComponentsIconAlreadyTaken } = useDataManager();
-  const [originalIcon] = useState(value);
   const initialIcons = allIcons.filter(ico => {
     if (isCreating) {
       return !allComponentsIconAlreadyTaken.includes(ico);
@@ -25,6 +24,7 @@ const ComponentIconPicker = ({ error, isCreating, label, name, onChange, value }
   });
   const ref = useRef();
   const searchWrapperRef = useRef();
+  const [originalIcon] = useState(value);
   const [showSearch, setShowSearch] = useState(false);
   const [search, setSearch] = useState('');
   const [icons, setIcons] = useState(initialIcons);

@@ -11,6 +11,14 @@ const {
   models: { getValuePrimaryKey },
 } = require('strapi-utils');
 
+const getModel = function(model, plugin) {
+  return (
+    _.get(strapi.plugins, [plugin, 'models', model]) ||
+    _.get(strapi, ['models', model]) ||
+    undefined
+  );
+};
+
 const transformToArrayID = (array, pk) => {
   if (_.isArray(array)) {
     return array
@@ -99,7 +107,7 @@ module.exports = {
         return _.set(acc, attribute, newValue);
       }
 
-      const assocModel = strapi.db.getModel(details.model || details.collection, details.plugin);
+      const assocModel = getModel(details.model || details.collection, details.plugin);
 
       switch (association.nature) {
         case 'oneWay': {
@@ -225,7 +233,7 @@ module.exports = {
         case 'manyMorphToMany':
         case 'manyMorphToOne': {
           newValue.forEach(obj => {
-            const refModel = strapi.db.getModel(obj.ref, obj.source);
+            const refModel = strapi.getModel(obj.ref, obj.source);
 
             const createRelation = () => {
               return addRelationMorph(this, {
@@ -290,7 +298,7 @@ module.exports = {
           const toAdd = _.difference(newIds, currentIds);
           const toRemove = _.difference(currentIds, newIds);
 
-          const model = strapi.db.getModel(details.model || details.collection, details.plugin);
+          const model = getModel(details.model || details.collection, details.plugin);
 
           if (!Array.isArray(newValue)) {
             _.set(acc, attribute, newIds[0]);

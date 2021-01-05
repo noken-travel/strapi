@@ -1,6 +1,5 @@
 module.exports = {
   name: 'Unit test',
-  testMatch: ['<rootDir>/packages/**/__tests__/?(*.)+(spec|test).js'],
-  modulePathIgnorePatterns: ['.cache'],
+  testMatch: ['**/packages/**/__tests__/?(*.)+(spec|test).js'],
   transform: {},
 };

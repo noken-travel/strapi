@@ -4,38 +4,12 @@
  *
  */
 
-import {
-  GET_STRAPI_LATEST_RELEASE_SUCCEEDED,
-  GET_USER_PERMISSIONS,
-  GET_USER_PERMISSIONS_ERROR,
-  GET_USER_PERMISSIONS_SUCCEEDED,
-  SET_APP_ERROR,
-} from './constants';
+import { GET_PLUGINS_FROM_MARKETPLACE_SUCCEEDED, SET_APP_ERROR } from './constants';
 
-export function getStrapiLatestReleaseSucceeded(latestStrapiReleaseTag) {
+export function getPluginsFromMarketPlaceSucceeded(plugins) {
   return {
-    type: GET_STRAPI_LATEST_RELEASE_SUCCEEDED,
-    latestStrapiReleaseTag,
-  };
-}
-
-export function getUserPermissions() {
-  return {
-    type: GET_USER_PERMISSIONS,
-  };
-}
-
-export function getUserPermissionsError(error) {
-  return {
-    type: GET_USER_PERMISSIONS_ERROR,
-    error,
-  };
-}
-
-export function getUserPermissionsSucceeded(data) {
-  return {
-    type: GET_USER_PERMISSIONS_SUCCEEDED,
-    data,
+    type: GET_PLUGINS_FROM_MARKETPLACE_SUCCEEDED,
+    plugins,
   };
 }
 

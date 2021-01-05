@@ -27,9 +27,6 @@ const HIDDEN_CONTENT_TYPES = [
   'plugins::upload.file',
   'plugins::users-permissions.permission',
   'plugins::users-permissions.role',
-  'strapi::permission',
-  'strapi::role',
-  'strapi::user',
 ];
 
 const getConfiguration = uid => {
@@ -70,10 +67,6 @@ const formatContentType = contentType => {
 
 const formatAttributes = model => {
   return Object.keys(model.attributes).reduce((acc, key) => {
-    if (['created_by', 'updated_by'].includes(key)) {
-      return acc;
-    }
-
     acc[key] = formatAttribute(key, model.attributes[key], { model });
     return acc;
   }, {});
@@ -135,14 +128,10 @@ const createTimestampsSchema = contentType => {
   };
 };
 
-const getDisplayedContentTypesUids = () =>
-  Object.keys(strapi.contentTypes).filter(ct => !HIDDEN_CONTENT_TYPES.includes(ct));
-
 module.exports = {
   getConfiguration,
   setConfiguration,
   deleteConfiguration,
   formatContentType,
   formatContentTypeSchema,
-  getDisplayedContentTypesUids,
 };

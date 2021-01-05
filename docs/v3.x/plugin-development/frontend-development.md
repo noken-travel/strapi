@@ -8,27 +8,10 @@ The admin panel is a [React](https://facebook.github.io/react/) application whic
 
 To enable local plugin development, you need to start your application with the front-end development mode activated:
 
-:::: tabs
-
-::: tab yarn
-
 ```bash
 $ cd my-app
 $ yarn develop --watch-admin
 ```
-
-:::
-
-::: tab npm
-
-```bash
-$ cd my-app
-$ npm run develop -- --watch-admin
-```
-
-:::
-
-::::
 
 ## API
 
@@ -58,25 +41,7 @@ Remove the loader so the user can interact with the application
 
 #### `strapi.notification`
 
-Use this command anywhere in your code.
-
-```js
-strapi.notification.toggle(config);
-```
-
-The properties of the config object are as follows:
-
-| key             | type          | default                  | Description                                                                                                                  |
-| --------------- | ------------- | ------------------------ | :--------------------------------------------------------------------------------------------------------------------------- |
-| type            | string        | success                  | `success`, `warning` or `info`                                                                                               |
-| message         | object/string | app.notification.success | The main message to display (works with i18n message object, `{ id: 'app.notification.success', defaultMessage: 'Saved!' }`) |
-| title           | object/string | null                     | Add a title to the notification                                                                                              |
-| link            | object        | null                     | Add a link to the notification message `{ url: String, label: String|Object }`                                               |
-| timeout         | number        | 2500                     | Time in ms before the notification is closed                                                                                 |
-| blockTransition | boolean       | false                    | Block the notification transitions to remove the timeout                                                                     |
-| uid             | string        | null                     | Custom the notification uid                                                                                                  |
-
-The previous notification API is still working but will display a warning message in the console
+Display a notification (works with i18n message id). Use this command anywhere in your code.
 
 ```js
 strapi.notification.error('app.notification.error');
@@ -103,9 +68,9 @@ Here are its properties:
 | id                        | string  | Id of the plugin from the `package.json`                                                                                                                                                                                |
 | initializer               | node    | Refer to the [Initializer documentation](#initializer)                                                                                                                                                                  |
 | injectedComponents        | array   | Refer to the [Injected Component documentation](#injected-components)                                                                                                                                                   |
-| isReady                   | boolean | The app will load until this property is true                                                                                                                                                                           |
-| mainComponent             | node    | The plugin's App container,                                                                                                                                                                                             |
-| menu                      | object  | Define where the link of your plugin will be set. Without this your plugin will not display a link in the left menu                                                                                                     |
+| isReady                   | boolean | The app will load until this proprety is true                                                                                                                                                                           |
+| leftMenuLinks             | array   | Array of links to inject in the menu                                                                                                                                                                                    |
+| mainComponent             | node    | The plugin's App container, setting it to null will prevent the plugin from being displayed in the menu                                                                                                                 |
 | name                      | string  | The plugin's name retrieved from the package.json                                                                                                                                                                       |
 | pluginLogo                | file    | The plugin's logo                                                                                                                                                                                                       |
 | preventComponentRendering | boolean | Whether or not display the plugin's blockerComponent instead of the main component                                                                                                                                      |
@@ -113,69 +78,11 @@ Here are its properties:
 | reducers                  | object  | The plugin's redux reducers                                                                                                                                                                                             |
 | trads                     | object  | The plugin's translation files                                                                                                                                                                                          |
 
-### Displaying the plugin's link in the main menu
-
-To display a plugin link into the main menu the plugin needs to export a menu object.
-
-**Path —** `plugins/my-plugin/admin/src/index.js`.
-
-```js
-import pluginPkg from '../../package.json';
-import pluginLogo from './assets/images/logo.svg';
-import App from './containers/App';
-import lifecycles from './lifecycles';
-import trads from './translations';
-import pluginId from './pluginId';
-
-export default strapi => {
-  const pluginDescription = pluginPkg.strapi.description || pluginPkg.description;
-  const icon = pluginPkg.strapi.icon;
-  const name = pluginPkg.strapi.name;
-  const plugin = {
-    blockerComponent: null,
-    blockerComponentProps: {},
-    description: pluginDescription,
-    icon,
-    id: pluginId,
-    initializer: null,
-    isRequired: pluginPkg.strapi.required || false,
-    layout: null,
-    lifecycles,
-    mainComponent: App,
-    name,
-    pluginLogo,
-    preventComponentRendering: false,
-    trads,
-    menu: {
-      // Set a link into the PLUGINS section
-      pluginsSectionLinks: [
-        {
-          destination: `/plugins/${pluginId}`, // Endpoint of the link
-          icon,
-          label: {
-            id: `${pluginId}.plugin.name`, // Refers to a i18n
-            defaultMessage: 'My PLUGIN',
-          },
-          name,
-          // If the plugin has some permissions on whether or not it should be accessible
-          // depending on the logged in user's role you can set them here.
-          // Each permission object performs an OR comparison so if one matches the user's ones
-          // the link will be displayed
-          permissions: [{ action: 'plugins::content-type-builder.read', subject: null }],
-        },
-      ],
-    },
-  };
-
-  return strapi.registerPlugin(plugin);
-};
-```
-
 ### Initializer
 
 The component is generated by default when you create a new plugin. Use this component to execute some logic when the app is loading. When the logic has been executed this component should emit the `isReady` event so the user can interact with the application.
 
-::: tip NOTE
+:::note
 Below is the Initializer component of the content-type-builder plugin.
 
 It checks whether or not the auto-reload feature is enabled and depending on this value changes the mainComponent of the plugin.

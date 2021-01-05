@@ -128,10 +128,7 @@ const EditSettingsView = ({
         });
       } catch (err) {
         if (err.code !== 20) {
-          strapi.notification.toggle({
-            type: 'warning',
-            message: { id: 'notification.error' },
-          });
+          strapi.notification.error('notification.error');
         }
       }
     };
@@ -193,10 +190,7 @@ const EditSettingsView = ({
 
       emitEvent('didEditEditSettings');
     } catch (err) {
-      strapi.notification.toggle({
-        type: 'warning',
-        message: { id: 'notification.error' },
-      });
+      strapi.notification.error('notification.error');
     }
   };
 

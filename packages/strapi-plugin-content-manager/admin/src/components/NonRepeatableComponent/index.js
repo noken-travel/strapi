@@ -8,9 +8,16 @@ import NonRepeatableWrapper from '../NonRepeatableWrapper';
 import Inputs from '../Inputs';
 import FieldComponent from '../FieldComponent';
 
-const NonRepeatableComponent = ({ componentUid, fields, isFromDynamicZone, name, schema }) => {
-  const getField = fieldName => get(schema, ['schema', 'attributes', fieldName], {});
-  const getMeta = fieldName => get(schema, ['metadatas', fieldName, 'edit'], {});
+const NonRepeatableComponent = ({
+  fields,
+  isFromDynamicZone,
+  name,
+  schema,
+}) => {
+  const getField = fieldName =>
+    get(schema, ['schema', 'attributes', fieldName], {});
+  const getMeta = fieldName =>
+    get(schema, ['metadatas', fieldName, 'edit'], {});
 
   return (
     <NonRepeatableWrapper isFromDynamicZone={isFromDynamicZone}>
@@ -23,13 +30,13 @@ const NonRepeatableComponent = ({ componentUid, fields, isFromDynamicZone, name,
               const keys = `${name}.${field.name}`;
 
               if (isComponent) {
-                const compoUid = currentField.component;
+                const componentUid = currentField.component;
                 const metas = getMeta(field.name);
 
                 return (
                   <FieldComponent
                     key={field.name}
-                    componentUid={compoUid}
+                    componentUid={componentUid}
                     isRepeatable={currentField.repeatable}
                     label={metas.label}
                     max={currentField.max}
@@ -45,7 +52,7 @@ const NonRepeatableComponent = ({ componentUid, fields, isFromDynamicZone, name,
                     keys={keys}
                     layout={schema}
                     name={field.name}
-                    componentUid={componentUid}
+                    onChange={() => {}}
                   />
                 </div>
               );
@@ -63,7 +70,6 @@ NonRepeatableComponent.defaultProps = {
 };
 
 NonRepeatableComponent.propTypes = {
-  componentUid: PropTypes.string.isRequired,
   fields: PropTypes.array,
   isFromDynamicZone: PropTypes.bool,
   name: PropTypes.string.isRequired,

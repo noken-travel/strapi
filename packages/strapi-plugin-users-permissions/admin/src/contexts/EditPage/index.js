@@ -4,7 +4,9 @@ import PropTypes from 'prop-types';
 const EditPageContext = createContext({});
 
 const EditPageContextProvider = ({ children, ...rest }) => {
-  return <EditPageContext.Provider value={rest}>{children}</EditPageContext.Provider>;
+  return (
+    <EditPageContext.Provider value={rest}>{children}</EditPageContext.Provider>
+  );
 };
 
 const useEditPageContext = () => useContext(EditPageContext);

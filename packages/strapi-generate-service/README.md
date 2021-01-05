@@ -22,7 +22,7 @@ $ strapi generate:service sendEmail email
 
 ## Resources
 
-- [License](LICENSE)
+- [MIT License](LICENSE.md)
 
 ## Links
 

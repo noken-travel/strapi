@@ -35,16 +35,6 @@ const defaults = {
 
 const isMongooseConnection = ({ connector }) => connector === 'mongoose';
 
-const createConnectionURL = opts => {
-  const { protocol, auth, host, port } = opts;
-
-  return {
-    toString() {
-      return `${protocol}://${auth}${host}${port}/`;
-    },
-  };
-};
-
 module.exports = function(strapi) {
   function initialize() {
     const { connections } = strapi.config;
@@ -96,19 +86,18 @@ module.exports = function(strapi) {
         connectOptions.useNewUrlParser = true;
         connectOptions.dbName = database;
         connectOptions.useCreateIndex = true;
-        connectOptions.useUnifiedTopology = useUnifiedTopology || true;
+        connectOptions.useUnifiedTopology = useUnifiedTopology || 'false';
 
         try {
-          const connectionURL = createConnectionURL({
-            protocol: `mongodb${isSrv ? '+srv' : ''}`,
-            port: isSrv ? '' : `:${port}`,
-            host,
-            auth: username ? `${username}:${encodeURIComponent(password)}@` : '',
-          });
-
-          const connectionString = uri || connectionURL.toString();
-
-          await instance.connect(connectionString, connectOptions);
+          /* FIXME: for now, mongoose doesn't support srv auth except the way including user/pass in URI.
+           * https://github.com/Automattic/mongoose/issues/6881 */
+          await instance.connect(
+            uri ||
+              `mongodb${isSrv ? '+srv' : ''}://${username}:${encodeURIComponent(password)}@${host}${
+                !isSrv ? ':' + port : ''
+              }/`,
+            connectOptions
+          );
         } catch (error) {
           const err = new Error(`Error connecting to the Mongo database. ${error.message}`);
           delete err.stack;

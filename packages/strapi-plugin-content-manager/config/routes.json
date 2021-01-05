@@ -21,7 +21,7 @@
       "path": "/content-types/:uid",
       "handler": "ContentTypes.updateContentType",
       "config": {
-        "policies": ["admin::isAuthenticatedAdmin"]
+        "policies": []
       }
     },
     {
@@ -69,7 +69,7 @@
       "path": "/explorer/:model",
       "handler": "ContentManager.find",
       "config": {
-        "policies": ["routing", "admin::isAuthenticatedAdmin"]
+        "policies": ["routing"]
       }
     },
     {
@@ -77,11 +77,7 @@
       "path": "/explorer/:model/count",
       "handler": "ContentManager.count",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.read"]]
-        ]
+        "policies": ["routing"]
       }
     },
     {
@@ -89,30 +85,7 @@
       "path": "/explorer/:model/:id",
       "handler": "ContentManager.findOne",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.read"]]
-        ]
-      }
-    },
-    {
-      "method": "GET",
-      "path": "/explorer/:model/relation-list/:targetField",
-      "handler": "ContentManager.findRelationList",
-      "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          [
-            "plugins::content-manager.hasPermissions",
-            [
-              "plugins::content-manager.explorer.create",
-              "plugins::content-manager.explorer.update"
-            ],
-            { "hasAtLeastOne": true }
-          ]
-        ]
+        "policies": ["routing"]
       }
     },
     {
@@ -120,11 +93,7 @@
       "path": "/explorer/:model",
       "handler": "ContentManager.create",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.create"]]
-        ]
+        "policies": ["routing"]
       }
     },
     {
@@ -132,11 +101,7 @@
       "path": "/explorer/:model/:id",
       "handler": "ContentManager.update",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.update"]]
-        ]
+        "policies": ["routing"]
       }
     },
     {
@@ -144,11 +109,7 @@
       "path": "/explorer/deleteAll/:model",
       "handler": "ContentManager.deleteMany",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.delete"]]
-        ]
+        "policies": ["routing"]
       }
     },
     {
@@ -156,37 +117,7 @@
       "path": "/explorer/:model/:id",
       "handler": "ContentManager.delete",
       "config": {
-        "policies": [
-          "routing",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.delete"]]
-        ]
-      }
-    },
-    {
-      "method": "POST",
-      "path": "/explorer/:model/publish/:id",
-      "handler": "ContentManager.publish",
-      "config": {
-        "policies": [
-          "routing",
-          "plugins::content-manager.has-draft-and-publish",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.publish"]]
-        ]
-      }
-    },
-    {
-      "method": "POST",
-      "path": "/explorer/:model/unpublish/:id",
-      "handler": "ContentManager.unpublish",
-      "config": {
-        "policies": [
-          "routing",
-          "plugins::content-manager.has-draft-and-publish",
-          "admin::isAuthenticatedAdmin",
-          ["plugins::content-manager.hasPermissions", ["plugins::content-manager.explorer.publish"]]
-        ]
+        "policies": ["routing"]
       }
     }
   ]

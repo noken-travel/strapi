@@ -94,8 +94,6 @@ function LeftMenuList({ customLink, links, title, searchable }) {
     title: formatTitleWithIntl(title),
   };
 
-  // TODO refacto this component
-
   return (
     <Wrapper>
       <div className="list-header">

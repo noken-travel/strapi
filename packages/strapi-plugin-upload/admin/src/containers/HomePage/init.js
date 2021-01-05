@@ -1,5 +1,5 @@
-const init = (initialState, allowedActions) => {
-  return initialState.set('isLoading', allowedActions.canRead);
+const init = initialState => {
+  return initialState;
 };
 
 export default init;

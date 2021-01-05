@@ -9,7 +9,6 @@ import {
   isNaN,
   toNumber,
 } from 'lodash';
-import moment from 'moment';
 import * as yup from 'yup';
 import { translatedErrors as errorsTrads } from 'strapi-helper-plugin';
 
@@ -57,11 +56,7 @@ yup.addMethod(yup.string, 'isSuperior', function(message, min) {
 
 const getAttributes = data => get(data, ['schema', 'attributes'], {});
 
-const createYupSchema = (
-  model,
-  { components },
-  options = { isCreatingEntry: true, isDraft: true, isFromComponent: false }
-) => {
+const createYupSchema = (model, { components }, isCreatingEntry = true) => {
   const attributes = getAttributes(model);
 
   return yup.object().shape(
@@ -73,7 +68,7 @@ const createYupSchema = (
         attribute.type !== 'component' &&
         attribute.type !== 'dynamiczone'
       ) {
-        const formatted = createYupSchemaAttribute(attribute.type, attribute, options);
+        const formatted = createYupSchemaAttribute(attribute.type, attribute, isCreatingEntry);
         acc[current] = formatted;
       }
 
@@ -90,20 +85,16 @@ const createYupSchema = (
       }
 
       if (attribute.type === 'component') {
-        const componentFieldSchema = createYupSchema(
-          components[attribute.component],
-          {
-            components,
-          },
-          { ...options, isFromComponent: true }
-        );
+        const componentFieldSchema = createYupSchema(components[attribute.component], {
+          components,
+        });
 
         if (attribute.repeatable === true) {
           const { min, max, required } = attribute;
           let componentSchema = yup.lazy(value => {
             let baseSchema = yup.array().of(componentFieldSchema);
 
-            if (min && !options.isDraft) {
+            if (min) {
               if (required) {
                 baseSchema = baseSchema.min(min, errorsTrads.min);
               } else if (required !== true && isEmpty(value)) {
@@ -126,7 +117,7 @@ const createYupSchema = (
         }
         const componentSchema = yup.lazy(obj => {
           if (obj !== undefined) {
-            return attribute.required === true && !options.isDraft
+            return attribute.required === true
               ? componentFieldSchema.defined()
               : componentFieldSchema.nullable();
           }
@@ -142,53 +133,19 @@ const createYupSchema = (
       if (attribute.type === 'dynamiczone') {
         let dynamicZoneSchema = yup.array().of(
           yup.lazy(({ __component }) => {
-            return createYupSchema(
-              components[__component],
-              { components },
-              { ...options, isFromComponent: true }
-            );
+            return createYupSchema(components[__component], { components });
           })
         );
 
         const { max, min } = attribute;
 
-        if (attribute.required && !options.isDraft) {
-          dynamicZoneSchema = dynamicZoneSchema.test('required', errorsTrads.required, value => {
-            if (options.isCreatingEntry) {
-              return value !== null || value !== undefined;
-            }
-
-            if (value === undefined) {
-              return true;
-            }
-
-            return value !== null;
-          });
+        if (attribute.required) {
+          dynamicZoneSchema = dynamicZoneSchema.required();
 
           if (min) {
             dynamicZoneSchema = dynamicZoneSchema
-              .test('min', errorsTrads.min, value => {
-                if (options.isCreatingEntry) {
-                  return value && value.length > 0;
-                }
-
-                if (value === undefined) {
-                  return true;
-                }
-
-                return value !== null && value.length > 0;
-              })
-              .test('required', errorsTrads.required, value => {
-                if (options.isCreatingEntry) {
-                  return value !== null || value !== undefined;
-                }
-
-                if (value === undefined) {
-                  return true;
-                }
-
-                return value !== null;
-              });
+              .min(min, errorsTrads.min)
+              .required(errorsTrads.required);
           }
         } else {
           // eslint-disable-next-line no-lonely-if
@@ -209,7 +166,7 @@ const createYupSchema = (
   );
 };
 
-const createYupSchemaAttribute = (type, validations, options) => {
+const createYupSchemaAttribute = (type, validations, isCreatingEntry) => {
   let schema = yup.mixed();
 
   let regex = get(validations, 'regex', null);
@@ -275,41 +232,12 @@ const createYupSchemaAttribute = (type, validations, options) => {
     ) {
       switch (validation) {
         case 'required': {
-          if (!options.isDraft) {
-            if (type === 'password' && options.isCreatingEntry) {
-              schema = schema.required(errorsTrads.required);
-            }
+          if (type === 'password' && isCreatingEntry) {
+            schema = schema.required(errorsTrads.required);
+          }
 
-            if (type !== 'password') {
-              if (options.isCreatingEntry) {
-                schema = schema.required(errorsTrads.required);
-              } else {
-                schema = schema.test('required', errorsTrads.required, value => {
-                  // Field is not touched and the user is editing the entry
-                  if (value === undefined && !options.isFromComponent) {
-                    return true;
-                  }
-
-                  if (['number', 'integer', 'biginteger', 'float', 'decimal'].includes(type)) {
-                    if (value === 0) {
-                      return true;
-                    }
-
-                    return !!value;
-                  }
-
-                  if (['date', 'datetime'].includes(type)) {
-                    return moment(value)._isValid === true;
-                  }
-
-                  if (type === 'boolean') {
-                    return value !== undefined;
-                  }
-
-                  return !isEmpty(value);
-                });
-              }
-            }
+          if (type !== 'password') {
+            schema = schema.required(errorsTrads.required);
           }
 
           break;
@@ -334,12 +262,9 @@ const createYupSchemaAttribute = (type, validations, options) => {
           }
           break;
         }
-        case 'minLength': {
-          if (!options.isDraft) {
-            schema = schema.min(validationValue, errorsTrads.minLength);
-          }
+        case 'minLength':
+          schema = schema.min(validationValue, errorsTrads.minLength);
           break;
-        }
         case 'regex':
           schema = schema.matches(validationValue, errorsTrads.regex);
           break;

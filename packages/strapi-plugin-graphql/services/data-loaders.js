@@ -30,9 +30,6 @@ module.exports = {
         this.createLoader(model.uid);
       });
     });
-
-    // Add the loader for the AdminUser as well, so we can query `created_by` and `updated_by` AdminUsers
-    this.createLoader('strapi::user');
   },
 
   resetLoaders: function() {
@@ -156,7 +153,10 @@ module.exports = {
       .value();
 
     // Run query and remove duplicated ID.
-    return strapi.plugins['content-manager'].services['contentmanager'].fetchAll(modelUID, params);
+    return strapi.plugins['content-manager'].services['contentmanager'].fetchAll(
+      { model: modelUID },
+      params
+    );
   },
 
   extractQueries: function(modelUID, keys) {

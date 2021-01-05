@@ -39,7 +39,10 @@ const PopupForm = ({
       <HeaderModal>
         <section>
           <HeaderModalTitle style={{ textTransform: 'none' }}>
-            <AttributeIcon type={getAttrType()} style={{ margin: 'auto 20px auto 0' }} />
+            <AttributeIcon
+              type={getAttrType()}
+              style={{ margin: 'auto 20px auto 0' }}
+            />
             <FormattedMessage id={headerId} />
           </HeaderModalTitle>
         </section>
@@ -57,7 +60,7 @@ const PopupForm = ({
         <ModalFooter>
           <section>
             <Button onClick={onToggle} color="cancel">
-              <FormattedMessage id="app.components.Button.cancel" />
+              <FormattedMessage id="components.popUpWarning.button.cancel" />
             </Button>
             <Button type="submit" color="success">
               <FormattedMessage id="form.button.done" />

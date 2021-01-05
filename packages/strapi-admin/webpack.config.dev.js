@@ -15,7 +15,6 @@ module.exports = () => {
     dest,
     env,
     options,
-    useEE: process.env.STRAPI_DISABLE_EE === 'true' ? false : true,
   };
 
   return {

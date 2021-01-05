@@ -25,12 +25,8 @@ function checkStatus(response, checkToken = true) {
     return response;
   }
 
-  // TODO handle 403...
-
   if (response.status === 401 && auth.getToken() && checkToken) {
-    // Temporary fix until we create a new request helper
-    auth.clearAppStorage();
-    window.location.reload();
+    return checkTokenValidity(response);
   }
 
   return parseJSON(response)
@@ -46,6 +42,28 @@ function checkStatus(response, checkToken = true) {
 
       throw error;
     });
+}
+
+function checkTokenValidity(response) {
+  const options = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${auth.getToken()}`,
+    },
+  };
+
+  if (auth.getToken()) {
+    return fetch(`${strapi.backendURL}/users/me`, options).then(() => {
+      if (response.status === 401) {
+        window.location = `${strapi.remoteURL}/plugins/users-permissions/auth/login`;
+
+        auth.clearAppStorage();
+      }
+
+      return checkStatus(response, false);
+    });
+  }
 }
 
 /**
@@ -79,7 +97,8 @@ function serverRestartWatcher(response) {
         if (res.status >= 400) {
           throw new Error('not available');
         }
-
+        // Hide the global OverlayBlocker
+        strapi.unlockApp();
         resolve(response);
       })
       .catch(() => {
@@ -147,6 +166,9 @@ export default function request(...args) {
     .then(parseJSON)
     .then(response => {
       if (shouldWatchServerRestart) {
+        // Display the global OverlayBlocker
+        strapi.lockApp(shouldWatchServerRestart);
+
         return serverRestartWatcher(response);
       }
 

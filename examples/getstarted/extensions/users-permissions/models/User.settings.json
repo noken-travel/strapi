@@ -5,8 +5,10 @@
     "description": ""
   },
   "options": {
-    "draftAndPublish": false,
-    "timestamps": ["created_at", "updated_at"]
+    "timestamps": [
+      "created_at",
+      "updated_at"
+    ]
   },
   "attributes": {
     "username": {
@@ -33,11 +35,6 @@
       "private": true
     },
     "resetPasswordToken": {
-      "type": "string",
-      "configurable": false,
-      "private": true
-    },
-    "confirmationToken": {
       "type": "string",
       "configurable": false,
       "private": true
